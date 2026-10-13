@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <Preference
+        android:key="open_global"
+        android:title="@string/pref_global_settings" />
+
+    <PreferenceCategory android:title="@string/pref_clock_cat">
+        <ListPreference
+            android:key="clock_style"
+            android:title="@string/pref_clock_style"
+            android:entries="@array/clock_style_entries"
+            android:entryValues="@array/clock_style_values"
+            android:defaultValue="system"
+            app:useSimpleSummaryProvider="true" />
+        <SeekBarPreference
+            android:key="clock_size"
+            android:title="@string/pref_clock_size"
+            android:defaultValue="64"
+            android:max="96"
+            app:min="32"
+            app:showSeekBarValue="true" />
+        <EditTextPreference
+            android:key="date_pattern"
+            android:title="@string/pref_date_pattern"
+            android:summary="@string/pref_date_pattern_summary"
+            android:defaultValue="EEEE d MMMM" />
+        <SwitchPreferenceCompat
+            android:key="show_location"
+            android:title="@string/pref_show_location"
+            android:defaultValue="true" />
+        <ListPreference
+            android:key="clock_app"
+            android:title="@string/pref_clock_app"
+            android:defaultValue=""
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_weather_look_cat">
+        <SwitchPreferenceCompat
+            android:key="image_enabled"
+            android:title="@string/pref_image_enabled"
+            android:defaultValue="true" />
+        <SeekBarPreference
+            android:key="image_opacity"
+            android:title="@string/pref_image_opacity"
+            android:defaultValue="70"
+            android:max="100"
+            app:min="0"
+            app:showSeekBarValue="true" />
+        <ListPreference
+            android:key="icon_pack"
+            android:title="@string/pref_icon_pack"
+            android:entries="@array/icon_pack_entries"
+            android:entryValues="@array/icon_pack_values"
+            android:defaultValue="simple"
+            app:useSimpleSummaryProvider="true" />
+        <org.morlune.app.ColorPreference
+            android:key="icon_color"
+            android:title="@string/pref_icon_color"
+            android:defaultValue="#FFFFFFFF" />
+        <SeekBarPreference
+            android:key="forecast_days"
+            android:title="@string/pref_forecast_days"
+            android:defaultValue="5"
+            android:max="7"
+            app:min="2"
+            app:showSeekBarValue="true" />
+        <EditTextPreference
+            android:key="weather_url"
+            android:title="@string/pref_weather_url"
+            android:summary="@string/pref_weather_url_summary"
+            android:defaultValue="" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_calendar_cat">
+        <ListPreference
+            android:key="calendar_mode"
+            android:title="@string/pref_calendar_mode"
+            android:entries="@array/calendar_mode_entries"
+            android:entryValues="@array/calendar_mode_values"
+            android:defaultValue="agenda"
+            app:useSimpleSummaryProvider="true" />
+        <SeekBarPreference
+            android:key="calendar_rows"
+            android:title="@string/pref_calendar_rows"
+            android:defaultValue="6"
+            android:max="12"
+            app:min="3"
+            app:showSeekBarValue="true" />
+        <ListPreference
+            android:key="week_start"
+            android:title="@string/pref_week_start"
+            android:entries="@array/week_start_entries"
+            android:entryValues="@array/week_start_values"
+            android:defaultValue="MONDAY"
+            app:useSimpleSummaryProvider="true" />
+        <SeekBarPreference
+            android:key="week_chips"
+            android:title="@string/pref_week_chips"
+            android:defaultValue="3"
+            android:max="6"
+            app:min="1"
+            app:showSeekBarValue="true" />
+        <ListPreference
+            android:key="calendar_app"
+            android:title="@string/pref_calendar_app"
+            android:defaultValue=""
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_colors_cat">
+        <org.morlune.app.ColorPreference
+            android:key="text_color"
+            android:title="@string/pref_text_color"
+            android:defaultValue="#FFFFFFFF" />
+        <org.morlune.app.ColorPreference
+            android:key="bg_color"
+            android:title="@string/pref_bg_color"
+            android:defaultValue="#FF1B2733" />
+        <SeekBarPreference
+            android:key="bg_opacity"
+            android:title="@string/pref_bg_opacity"
+            android:defaultValue="60"
+            android:max="100"
+            app:min="0"
+            app:showSeekBarValue="true" />
+    </PreferenceCategory>
+</PreferenceScreen>

@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "id": "bom-au",
+  "name": "Bureau of Meteorology (Australia)",
+  "description": "Uses the JSON endpoints behind weather.bom.gov.au. These are undocumented and may change; BOM terms restrict heavy automated use, so keep refresh intervals sensible.",
+  "attribution": "Data from the Australian Bureau of Meteorology",
+  "webUrl": "https://weather.bom.gov.au/location/{geohash:6}",
+  "requests": [
+    {
+      "id": "obs",
+      "url": "https://api.weather.bom.gov.au/v1/locations/{geohash:6}/observations",
+      "type": "json",
+      "headers": { "Accept": "application/json" }
+    },
+    {
+      "id": "daily",
+      "url": "https://api.weather.bom.gov.au/v1/locations/{geohash:6}/forecasts/daily",
+      "type": "json",
+      "headers": { "Accept": "application/json" }
+    }
+  ],
+  "current": {
+    "temperature": { "request": "obs", "path": "$.data.temp" },
+    "feelsLike": { "request": "obs", "path": "$.data.temp_feels_like" },
+    "rain": { "request": "obs", "path": "$.data.rain_since_9am" },
+    "condition": { "request": "daily", "path": "$.data[0].icon_descriptor", "map": "bom" },
+    "isDay": { "request": "daily", "path": "$.data[0].now.is_night", "negate": true }
+  },
+  "daily": {
+    "request": "daily",
+    "layout": "rows",
+    "items": "$.data[*]",
+    "limit": 7,
+    "fields": {
+      "date": { "path": "$.date", "dateFormat": "instant-local" },
+      "min": "$.temp_min",
+      "max": "$.temp_max",
+      "condition": { "path": "$.icon_descriptor", "map": "bom" },
+      "rain": "$.rain.amount.max",
+      "rainChance": "$.rain.chance"
+    }
+  },
+  "conditionMaps": {
+    "bom": {
+      "CLEAR": ["sunny", "clear", "mostly_sunny"],
+      "PARTLY_CLOUDY": ["partly_cloudy"],
+      "CLOUDY": ["cloudy"],
+      "HAZE": ["hazy"],
+      "FOG": ["fog"],
+      "DUST": ["dusty"],
+      "HEAVY_RAIN": ["heavy_shower"],
+      "SHOWERS": ["shower", "light_shower"],
+      "RAIN": ["rain", "light_rain"],
+      "THUNDERSTORM": ["storm"],
+      "SNOW": ["snow", "light_snow"],
+      "FROST": ["frost"],
+      "WIND": ["windy", "cyclone", "tropical_cyclone"]
+    }
+  }
+}

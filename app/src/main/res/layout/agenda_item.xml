@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/ag_dot"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:layout_marginEnd="6dp"
+        android:src="@drawable/dot_shape" />
+
+    <TextView
+        android:id="@+id/ag_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="6dp"
+        android:singleLine="true"
+        android:textSize="12sp"
+        android:textColor="#FFFFFFFF"
+        android:shadowColor="#99000000"
+        android:shadowRadius="3"
+        android:shadowDy="1" />
+
+    <TextView
+        android:id="@+id/ag_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:singleLine="true"
+        android:textSize="12sp"
+        android:textColor="#FFFFFFFF"
+        android:shadowColor="#99000000"
+        android:shadowRadius="3"
+        android:shadowDy="1" />
+</LinearLayout>

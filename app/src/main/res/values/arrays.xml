@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<resources>
+    <string-array name="clock_style_entries">
+        <item>Follow the phone (12h or 24h)</item>
+        <item>24 hour</item>
+        <item>12 hour</item>
+        <item>12 hour with am/pm</item>
+    </string-array>
+    <string-array name="clock_style_values">
+        <item>system</item>
+        <item>24h</item>
+        <item>12h</item>
+        <item>12h_ampm</item>
+    </string-array>
+    <string-array name="refresh_entries">
+        <item>1 hour</item>
+        <item>2 hours</item>
+        <item>6 hours</item>
+        <item>12 hours</item>
+        <item>Once a day</item>
+    </string-array>
+    <string-array name="refresh_values">
+        <item>60</item>
+        <item>120</item>
+        <item>360</item>
+        <item>720</item>
+        <item>1440</item>
+    </string-array>
+    <string-array name="calendar_mode_entries">
+        <item>Agenda (list)</item>
+        <item>Week</item>
+    </string-array>
+    <string-array name="calendar_mode_values">
+        <item>agenda</item>
+        <item>week</item>
+    </string-array>
+    <string-array name="week_start_entries">
+        <item>Monday</item>
+        <item>Sunday</item>
+        <item>Today (rolling 7 days)</item>
+    </string-array>
+    <string-array name="week_start_values">
+        <item>MONDAY</item>
+        <item>SUNDAY</item>
+        <item>TODAY</item>
+    </string-array>
+    <string-array name="icon_pack_entries">
+        <item>Simple</item>
+    </string-array>
+    <string-array name="icon_pack_values">
+        <item>simple</item>
+    </string-array>
+</resources>

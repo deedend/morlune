@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "id": "open-meteo",
+  "name": "Open-Meteo",
+  "description": "Free worldwide forecast, no API key. Documented JSON API, so this is the safe fallback.",
+  "attribution": "Weather data by Open-Meteo.com (CC BY 4.0)",
+  "webUrl": "https://open-meteo.com/en/docs#latitude={lat:2}&longitude={lon:2}",
+  "requests": [
+    {
+      "id": "forecast",
+      "url": "https://api.open-meteo.com/v1/forecast?latitude={lat:4}&longitude={lon:4}&current=temperature_2m,apparent_temperature,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max&timezone=auto&forecast_days=7",
+      "type": "json"
+    }
+  ],
+  "current": {
+    "temperature": "$.current.temperature_2m",
+    "feelsLike": "$.current.apparent_temperature",
+    "rain": "$.daily.precipitation_sum[0]",
+    "condition": { "path": "$.current.weather_code", "map": "wmo" },
+    "isDay": "$.current.is_day"
+  },
+  "daily": {
+    "layout": "columns",
+    "limit": 7,
+    "fields": {
+      "date": "$.daily.time",
+      "min": "$.daily.temperature_2m_min",
+      "max": "$.daily.temperature_2m_max",
+      "condition": { "path": "$.daily.weather_code", "map": "wmo" },
+      "rain": "$.daily.precipitation_sum",
+      "rainChance": "$.daily.precipitation_probability_max"
+    }
+  },
+  "conditionMaps": {
+    "wmo": {
+      "CLEAR": ["0", "1"],
+      "PARTLY_CLOUDY": ["2"],
+      "CLOUDY": ["3"],
+      "FOG": ["45", "48"],
+      "DRIZZLE": ["51-57"],
+      "HEAVY_RAIN": ["65", "67"],
+      "RAIN": ["61-67"],
+      "SHOWERS": ["80-82"],
+      "SNOW": ["71-77", "85", "86"],
+      "HAIL": ["96", "99"],
+      "THUNDERSTORM": ["95"]
+    }
+  }
+}

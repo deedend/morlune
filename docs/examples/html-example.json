@@ -1,0 +1,37 @@
+{
+  "$comment": "Example of scraping an HTML page. weather.example.org is fictional; copy this and change the selectors for a real site.",
+  "schema": 1,
+  "id": "html-example",
+  "name": "HTML scraping example",
+  "requests": [
+    { "id": "page", "url": "https://weather.example.org/town/{extra.slug}", "type": "html" }
+  ],
+  "webUrl": "https://weather.example.org/town/{extra.slug}",
+  "current": {
+    "temperature": "#now .temp",
+    "condition": { "selector": "#now .desc", "map": "text" }
+  },
+  "daily": {
+    "layout": "rows",
+    "items": "ul.forecast li.day",
+    "fields": {
+      "date": { "dateFormat": "sequential" },
+      "max": { "selector": ".hi", "regex": "(-?\\d+)" },
+      "min": ".lo",
+      "condition": { "selector": ".icon", "attr": "title", "map": "text" },
+      "rainChance": ".rain-chance"
+    }
+  },
+  "conditionMaps": {
+    "text": {
+      "THUNDERSTORM": ["~thunder", "~storm"],
+      "SHOWERS": ["~shower"],
+      "RAIN": ["~rain"],
+      "SNOW": ["~snow"],
+      "FOG": ["~fog", "~mist"],
+      "PARTLY_CLOUDY": ["~partly", "~mostly sunny"],
+      "CLOUDY": ["~cloud", "~overcast"],
+      "CLEAR": ["~sunny", "~clear"]
+    }
+  }
+}

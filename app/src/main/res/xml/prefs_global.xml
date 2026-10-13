@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="@string/pref_weather_cat">
+        <ListPreference
+            android:key="provider_id"
+            android:title="@string/pref_provider"
+            android:defaultValue="open-meteo"
+            app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat
+            android:key="fallback_open_meteo"
+            android:title="@string/pref_fallback"
+            android:summary="@string/pref_fallback_summary"
+            android:defaultValue="true" />
+        <EditTextPreference
+            android:key="extra_values"
+            android:title="@string/pref_extra"
+            android:summary="@string/pref_extra_summary"
+            android:defaultValue="" />
+        <Preference
+            android:key="import_provider"
+            android:title="@string/pref_import"
+            android:summary="@string/pref_import_summary" />
+        <Preference
+            android:key="remove_provider"
+            android:title="@string/pref_remove_provider" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_location_cat">
+        <EditTextPreference
+            android:key="loc_name"
+            android:title="@string/pref_loc_name"
+            android:defaultValue=""
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:key="loc_lat"
+            android:title="@string/pref_loc_lat"
+            android:defaultValue=""
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:key="loc_lon"
+            android:title="@string/pref_loc_lon"
+            android:defaultValue=""
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:key="loc_zone"
+            android:title="@string/pref_loc_zone"
+            android:defaultValue=""
+            app:useSimpleSummaryProvider="true" />
+        <Preference
+            android:key="use_device_location"
+            android:title="@string/pref_loc_device"
+            android:summary="@string/pref_loc_device_summary" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_refresh_cat">
+        <ListPreference
+            android:key="refresh_minutes"
+            android:title="@string/pref_refresh"
+            android:entries="@array/refresh_entries"
+            android:entryValues="@array/refresh_values"
+            android:defaultValue="120"
+            app:useSimpleSummaryProvider="true" />
+        <Preference
+            android:key="refresh_now"
+            android:title="@string/pref_refresh_now" />
+    </PreferenceCategory>
+</PreferenceScreen>

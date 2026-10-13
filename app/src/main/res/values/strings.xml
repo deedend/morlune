@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<resources>
+    <string name="app_name">Morlune</string>
+    <string name="widget_description">Clock, weather, forecast and calendar</string>
+
+    <string name="cal_permission_needed">Tap to allow calendar access</string>
+    <string name="cal_nothing">Nothing coming up</string>
+    <string name="cal_more">+%1$d more</string>
+    <string name="cal_all_day">All day</string>
+    <string name="day_today">Today</string>
+    <string name="day_tomorrow">Tomorrow</string>
+    <string name="no_weather_yet">Set a location in the settings</string>
+    <string name="rain_fmt">%1$s rain</string>
+    <string name="updating">Updating…</string>
+
+    <string name="pref_weather_cat">Weather source</string>
+    <string name="pref_provider">Weather provider</string>
+    <string name="pref_fallback">Fall back to Open-Meteo</string>
+    <string name="pref_fallback_summary">If the chosen provider fails, use Open-Meteo so the widget still updates</string>
+    <string name="pref_extra">Provider extra values</string>
+    <string name="pref_extra_summary">One key=value per line, for providers that use {extra.key} in their URL</string>
+    <string name="pref_import">Import a provider file…</string>
+    <string name="pref_import_summary">A .json file following docs/PROVIDERS.md</string>
+    <string name="pref_remove_provider">Remove an imported provider…</string>
+
+    <string name="pref_location_cat">Location</string>
+    <string name="pref_loc_name">Place name</string>
+    <string name="pref_loc_lat">Latitude</string>
+    <string name="pref_loc_lon">Longitude</string>
+    <string name="pref_loc_zone">Time zone (blank = phone setting)</string>
+    <string name="pref_loc_device">Use the phone\'s last known location</string>
+    <string name="pref_loc_device_summary">Fills in latitude and longitude once; the name stays yours to type</string>
+
+    <string name="pref_refresh_cat">Updates</string>
+    <string name="pref_refresh">Check the weather every</string>
+    <string name="pref_refresh_now">Refresh weather now</string>
+
+    <string name="pref_clock_cat">Clock and date</string>
+    <string name="pref_clock_style">Clock style</string>
+    <string name="pref_clock_size">Clock size</string>
+    <string name="pref_date_pattern">Date format</string>
+    <string name="pref_date_pattern_summary">Android date pattern, for example EEEE d MMMM</string>
+    <string name="pref_show_location">Show place name</string>
+    <string name="pref_clock_app">App opened by the clock</string>
+
+    <string name="pref_weather_look_cat">Weather look</string>
+    <string name="pref_image_enabled">Weather background picture</string>
+    <string name="pref_image_opacity">Picture opacity</string>
+    <string name="pref_icon_pack">Icon set</string>
+    <string name="pref_icon_color">Icon colour</string>
+    <string name="pref_forecast_days">Forecast days</string>
+    <string name="pref_weather_url">Weather page opened on tap</string>
+    <string name="pref_weather_url_summary">Blank = the page the provider suggests</string>
+
+    <string name="pref_calendar_cat">Calendar</string>
+    <string name="pref_calendar_mode">View</string>
+    <string name="pref_calendar_rows">Agenda rows</string>
+    <string name="pref_week_start">Week starts</string>
+    <string name="pref_week_chips">Events per day (week view)</string>
+    <string name="pref_calendar_app">App opened by the calendar</string>
+
+    <string name="pref_colors_cat">Colours</string>
+    <string name="pref_text_color">Text colour</string>
+    <string name="pref_bg_color">Background colour</string>
+    <string name="pref_bg_opacity">Background opacity</string>
+
+    <string name="pref_global_settings">Weather source, location and updates</string>
+    <string name="default_app">Default</string>
+    <string name="color_dialog_title">Pick a colour</string>
+    <string name="color_dialog_hint">#RRGGBB</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="color_invalid">Not a valid colour</string>
+    <string name="location_permission_denied">Location permission was not granted</string>
+    <string name="location_unknown">The phone has no stored location yet</string>
+    <string name="provider_imported">Imported %1$s</string>
+    <string name="provider_rejected">Rejected: %1$s</string>
+    <string name="no_imported_providers">No imported providers</string>
+    <string name="refreshing">Refreshing…</string>
+    <string name="credits_open_meteo">Weather data attribution is shown by the chosen provider.</string>
+</resources>
