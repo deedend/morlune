@@ -4,6 +4,8 @@ package org.morlune.app
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import android.util.AtomicFile
+import java.io.IOException
 import org.morlune.engine.HttpFetcher
 import org.morlune.engine.HttpResult
 import org.morlune.engine.ProviderException
@@ -21,16 +23,24 @@ object WeatherCache {
     private fun file(ctx: Context) = File(ctx.filesDir, "weather.json")
 
     fun load(ctx: Context): WeatherData? = try {
-        file(ctx).takeIf { it.exists() }?.readText()?.let { WeatherJson.fromJson(it) }
+        file(ctx).takeIf { it.exists() }?.let {
+            AtomicFile(it).openRead().bufferedReader().use { reader -> WeatherJson.fromJson(reader.readText()) }
+        }
     } catch (e: Exception) {
         Log.w(TAG, "cache unreadable: ${e.message}")
         null
     }
 
     fun save(ctx: Context, data: WeatherData) {
-        val tmp = File(ctx.filesDir, "weather.json.tmp")
-        tmp.writeText(WeatherJson.toJson(data))
-        tmp.renameTo(file(ctx))
+        val atomic = AtomicFile(file(ctx))
+        val stream = atomic.startWrite()
+        try {
+            stream.write(WeatherJson.toJson(data).toByteArray(Charsets.UTF_8))
+            atomic.finishWrite(stream)
+        } catch (e: Exception) {
+            atomic.failWrite(stream)
+            throw e
+        }
     }
 
     private const val TAG = "Morlune"
@@ -55,6 +65,7 @@ private class ReportingFetcher(private val inner: HttpFetcher, private val repor
 object ProviderStore {
     private const val TAG = "Morlune"
     private const val ASSET_DIR = "providers"
+    private const val MAX_PROVIDER_BYTES = 200_000
 
     private fun userDir(ctx: Context) = File(ctx.filesDir, "providers").also { it.mkdirs() }
 
@@ -64,8 +75,26 @@ object ProviderStore {
         val fetcher: HttpFetcher = if (report == null) plain else ReportingFetcher(plain, report)
         val reg = ProviderRegistry(fetcher, tokens = AppleTokens(ctx))
         builtinJson(ctx).forEach { (name, text) -> add(reg, name, text) }
-        userDir(ctx).listFiles { f -> f.extension == "json" }?.sortedBy { it.name }?.forEach { add(reg, it.name, it.readText()) }
+        userDir(ctx).listFiles { f -> f.extension == "json" }?.sortedBy { it.name }?.forEach { file ->
+            try { add(reg, file.name, readProvider(file)) }
+            catch (e: IOException) { Log.w(TAG, "provider ${file.name} skipped: ${e.message}") }
+        }
         return reg
+    }
+
+    private fun readProvider(file: File): String {
+        if (file.length() > MAX_PROVIDER_BYTES) throw IOException("provider file too large")
+        file.inputStream().use { input ->
+            val output = java.io.ByteArrayOutputStream()
+            val buffer = ByteArray(8192)
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) break
+                if (output.size() + count > MAX_PROVIDER_BYTES) throw IOException("provider file too large")
+                output.write(buffer, 0, count)
+            }
+            return output.toString(Charsets.UTF_8.name())
+        }
     }
 
     private fun add(reg: ProviderRegistry, source: String, text: String) {
@@ -81,6 +110,8 @@ object ProviderStore {
 
     /** Validates then stores a provider file. Returns the provider id, or throws ProviderException with a readable reason. */
     fun import(ctx: Context, text: String): String {
+        if (text.toByteArray(Charsets.UTF_8).size > MAX_PROVIDER_BYTES)
+            throw ProviderException("provider file is too large")
         val def = ProviderLoader.parse(text)
         if (def.id in builtinIds(ctx)) throw ProviderException("'${def.id}' is a built-in provider; pick another id")
         File(userDir(ctx), "${def.id}.json").writeText(text)
