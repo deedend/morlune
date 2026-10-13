@@ -52,7 +52,21 @@
             android:title="@string/pref_apple_key" />
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/pref_refresh_cat">
+        <ListPreference
+            android:key="refresh_minutes"
+            android:title="@string/pref_refresh"
+            android:entries="@array/refresh_entries"
+            android:entryValues="@array/refresh_values"
+            android:defaultValue="120"
+            app:useSimpleSummaryProvider="true" />
+        <Preference
+            android:key="refresh_now"
+            android:title="@string/pref_refresh_now" />
+    </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_location_cat">
+        <Preference android:key="resolved_suburb" android:title="@string/pref_resolved_suburb" />
+        <Preference android:key="resolve_suburb" android:title="@string/pref_resolve_suburb" android:summary="@string/pref_resolve_suburb_summary" />
         <EditTextPreference
             android:key="loc_name"
             android:title="@string/pref_loc_name"
@@ -79,26 +93,4 @@
             android:summary="@string/pref_loc_device_summary" />
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/pref_pictures_cat">
-        <Preference
-            android:key="pictures_choose"
-            android:title="@string/pref_pictures_choose"
-            android:summary="@string/pref_pictures_summary" />
-        <Preference
-            android:key="pictures_clear"
-            android:title="@string/pref_pictures_clear" />
-    </PreferenceCategory>
-
-    <PreferenceCategory android:title="@string/pref_refresh_cat">
-        <ListPreference
-            android:key="refresh_minutes"
-            android:title="@string/pref_refresh"
-            android:entries="@array/refresh_entries"
-            android:entryValues="@array/refresh_values"
-            android:defaultValue="120"
-            app:useSimpleSummaryProvider="true" />
-        <Preference
-            android:key="refresh_now"
-            android:title="@string/pref_refresh_now" />
-    </PreferenceCategory>
 </PreferenceScreen>

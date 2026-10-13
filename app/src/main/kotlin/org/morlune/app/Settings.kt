@@ -41,7 +41,11 @@ class GlobalSettings(private val p: SharedPreferences) {
         if (lat !in -90.0..90.0 || lon !in -180.0..180.0) return null
         return Location(
             lat = lat, lon = lon,
-            name = p.getString("loc_name", "").orEmpty().trim().ifEmpty { null },
+            name = p.getString("loc_name", "").orEmpty().trim().ifEmpty {
+                if (p.getString("loc_suburb_coordinates", "") == "$lat,$lon")
+                    p.getString("loc_suburb", "").orEmpty().trim()
+                else ""
+            }.ifEmpty { null },
             zoneId = zone().id,
             extra = parseExtra(p.getString("extra_values", "").orEmpty()),
         )
@@ -81,6 +85,7 @@ class WidgetSettings(private val p: SharedPreferences) {
     val calendarRows: Int get() = p.getInt("calendar_rows", 6)
     val weekStart: WeekStart get() = runCatching { WeekStart.valueOf(p.getString("week_start", "MONDAY").orEmpty()) }.getOrDefault(WeekStart.MONDAY)
     val weekChips: Int get() = p.getInt("week_chips", 3)
+    val weekDays: Int get() = p.getInt("week_days", 7).coerceIn(3, 7)
     val calendarApp: String get() = p.getString("calendar_app", "").orEmpty()
 
     val textColor: Int get() = p.getInt("text_color", Color.WHITE)

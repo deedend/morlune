@@ -153,9 +153,11 @@ object WidgetRenderer {
         if (!CalendarRepository.hasPermission(ctx)) return message(ctx, rv, R.string.cal_permission_needed)
 
         if (s.calendarMode == "week") {
-            val first = CalendarLogic.firstDay(today, s.weekStart)
-            val (from, to) = CalendarLogic.queryWindow(first, 7, zone)
-            val days = CalendarLogic.byDay(CalendarRepository.query(ctx, from, to), first, 7, zone)
+            val count = s.weekDays
+            // Compact views start today so they never show only past days.
+            val first = if (count == 7) CalendarLogic.firstDay(today, s.weekStart) else today
+            val (from, to) = CalendarLogic.queryWindow(first, count, zone)
+            val days = CalendarLogic.byDay(CalendarRepository.query(ctx, from, to), first, count, zone)
             val row = RemoteViews(ctx.packageName, R.layout.week_row)
             val dayFmt = DateTimeFormatter.ofPattern("EEEEE d", Locale.getDefault())
             for (day in days) {

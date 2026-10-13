@@ -4,6 +4,8 @@ package org.morlune.app
 import android.Manifest
 import android.app.Activity
 import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.location.Geocoder
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -23,6 +25,7 @@ import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceManager
 import org.morlune.engine.ProviderException
 import java.util.Locale
 
@@ -54,6 +57,11 @@ class SettingsActivity : AppCompatActivity() {
         }
         widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
         val globalOnly = intent.getBooleanExtra(EXTRA_GLOBAL, false) || widgetId == AppWidgetManager.INVALID_APPWIDGET_ID
+        // Launching from the app icon edits the first installed widget, if one exists.
+        val selectedWidgetId = if (globalOnly) {
+            AppWidgetManager.getInstance(this).getAppWidgetIds(ComponentName(this, MorluneProvider::class.java)).firstOrNull()
+                ?: AppWidgetManager.INVALID_APPWIDGET_ID
+        } else widgetId
 
         if (!globalOnly) {
             // Accept the widget straight away; the settings can be changed afterwards.
@@ -62,10 +70,21 @@ class SettingsActivity : AppCompatActivity() {
             if (!CalendarRepository.hasPermission(this)) askCalendar.launch(Manifest.permission.READ_CALENDAR)
         }
         if (savedInstanceState == null) {
-            val fragment = if (globalOnly) GlobalSettingsFragment() else WidgetSettingsFragment().apply {
-                arguments = Bundle().apply { putInt(ARG_WIDGET_ID, widgetId) }
+            val fragment = SettingsHomeFragment().apply {
+                arguments = Bundle().apply { putInt(ARG_WIDGET_ID, selectedWidgetId) }
             }
             supportFragmentManager.beginTransaction().replace(R.id.settings_container, fragment).commit()
+        }
+        supportFragmentManager.addOnBackStackChangedListener {
+            toolbar.title = if (supportFragmentManager.backStackEntryCount == 0) getString(R.string.app_name)
+                else supportFragmentManager.fragments.lastOrNull()?.let { f ->
+                    when (f) {
+                        is GlobalSettingsFragment -> getString(R.string.settings_weather)
+                        is AppsSettingsFragment -> getString(R.string.settings_apps)
+                        is ThemeSettingsFragment -> getString(R.string.settings_theme)
+                        else -> getString(R.string.app_name)
+                    }
+                } ?: getString(R.string.app_name)
         }
     }
 
@@ -90,12 +109,43 @@ private fun launcherApps(ctx: Context): List<Pair<String, String>> {
         .sortedBy { it.first.lowercase(Locale.getDefault()) }
 }
 
-class WidgetSettingsFragment : PreferenceFragmentCompat() {
+/** Three clear top-level areas. Weather is global; Apps and Theme are per-widget. */
+class SettingsHomeFragment : PreferenceFragmentCompat() {
+    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        setPreferencesFromResource(R.xml.prefs_home, rootKey)
+        val id = requireArguments().getInt(SettingsActivity.ARG_WIDGET_ID)
+        fun navigate(fragment: PreferenceFragmentCompat) {
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.settings_container, fragment)
+                .addToBackStack(null).commit()
+        }
+        findPreference<Preference>("settings_weather")?.setOnPreferenceClickListener {
+            navigate(GlobalSettingsFragment()); true
+        }
+        for ((key, klass) in listOf(
+            "settings_apps" to 0,
+            "settings_theme" to 1,
+        )) {
+            findPreference<Preference>(key)?.apply {
+                if (id == AppWidgetManager.INVALID_APPWIDGET_ID) {
+                    isEnabled = false
+                    summary = getString(R.string.settings_add_widget_first)
+                } else setOnPreferenceClickListener {
+                    val fragment = if (klass == 0) AppsSettingsFragment() else ThemeSettingsFragment()
+                    fragment.arguments = Bundle().apply { putInt(SettingsActivity.ARG_WIDGET_ID, id) }
+                    navigate(fragment); true
+                }
+            }
+        }
+    }
+}
+
+/** Settings stored in widget_<id> so two widgets can have different layouts. */
+class AppsSettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         val id = requireArguments().getInt(SettingsActivity.ARG_WIDGET_ID)
         preferenceManager.sharedPreferencesName = Prefs.widgetName(id)
-        setPreferencesFromResource(R.xml.prefs_widget, rootKey)
-
+        setPreferencesFromResource(R.xml.prefs_apps, rootKey)
         val apps = launcherApps(requireContext())
         for (key in listOf("clock_app", "calendar_app", "weather_app", "forecast_app")) {
             findPreference<ListPreference>(key)?.apply {
@@ -104,19 +154,59 @@ class WidgetSettingsFragment : PreferenceFragmentCompat() {
                 entryValues = (listOf("") + apps.map { it.second }).toTypedArray()
             }
         }
-        findPreference<androidx.preference.EditTextPreference>("weather_url")?.setOnBindEditTextListener {
+        findPreference<EditTextPreference>("weather_url")?.setOnBindEditTextListener {
             it.inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_URI
         }
-        findPreference<Preference>("open_global")?.setOnPreferenceClickListener {
-            startActivity(Intent(requireContext(), SettingsActivity::class.java).putExtra(SettingsActivity.EXTRA_GLOBAL, true))
-            true
+    }
+    override fun onStop() {
+        super.onStop()
+        val id = requireArguments().getInt(SettingsActivity.ARG_WIDGET_ID)
+        WidgetUpdater.update(requireContext(), id)
+    }
+}
+
+class ThemeSettingsFragment : PreferenceFragmentCompat() {
+    private val pickFolder = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) importPictures(uri)
+    }
+    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        val id = requireArguments().getInt(SettingsActivity.ARG_WIDGET_ID)
+        preferenceManager.sharedPreferencesName = Prefs.widgetName(id)
+        setPreferencesFromResource(R.xml.prefs_theme, rootKey)
+        findPreference<Preference>("pictures_choose")?.setOnPreferenceClickListener { pickFolder.launch(null); true }
+        findPreference<Preference>("pictures_clear")?.apply {
+            summary = getString(R.string.pictures_count, Pictures.count(requireContext()))
+            setOnPreferenceClickListener {
+                Pictures.clear(requireContext())
+                summary = getString(R.string.pictures_count, 0)
+                WidgetUpdater.updateAll(requireContext())
+                Toast.makeText(requireContext(), R.string.pictures_removed, Toast.LENGTH_LONG).show()
+                true
+            }
         }
+    }
+    private fun importPictures(tree: Uri) {
+        val ctx = requireContext().applicationContext
+        Toast.makeText(ctx, R.string.pictures_importing, Toast.LENGTH_LONG).show()
+        Thread {
+            val r = Pictures.import(ctx, tree)
+            WidgetUpdater.updateAll(ctx)
+            activity?.runOnUiThread {
+                Toast.makeText(ctx, getString(R.string.pictures_done, r.imported, r.skipped), Toast.LENGTH_LONG).show()
+                findPreference<Preference>("pictures_clear")?.summary = getString(R.string.pictures_count, Pictures.count(ctx))
+            }
+        }.start()
+    }
+    override fun onStop() {
+        super.onStop()
+        val id = requireArguments().getInt(SettingsActivity.ARG_WIDGET_ID)
+        WidgetUpdater.update(requireContext(), id)
     }
 }
 
 class GlobalSettingsFragment : PreferenceFragmentCompat() {
     /** Keys whose change means the weather has to be fetched again (or rescheduled). */
-    private val weatherKeys = setOf("provider_id", "fallback_open_meteo", "extra_values", "loc_lat", "loc_lon", "loc_zone", "loc_name", "refresh_minutes", "apple_team_id", "apple_service_id", "apple_key_id")
+    private val weatherKeys = setOf("provider_id", "fallback_open_meteo", "extra_values", "loc_lat", "loc_lon", "loc_zone", "loc_name", "loc_suburb", "refresh_minutes", "apple_team_id", "apple_service_id", "apple_key_id")
     private var dirty = false
     private val listener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
         if (key in weatherKeys) dirty = true
@@ -127,7 +217,6 @@ class GlobalSettingsFragment : PreferenceFragmentCompat() {
     }
 
     private val pickFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) importProvider(uri) }
-    private val pickFolder = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri -> if (uri != null) importPictures(uri) }
     private val pickAppleKey = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) importAppleKey(uri) }
     private val askLocation = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) fillFromDevice() else toast(getString(R.string.location_permission_denied))
@@ -137,6 +226,7 @@ class GlobalSettingsFragment : PreferenceFragmentCompat() {
         preferenceManager.sharedPreferencesName = Prefs.GLOBAL
         setPreferencesFromResource(R.xml.prefs_global, rootKey)
         fillProviderList()
+        findPreference<Preference>("resolved_suburb")?.summary = Prefs.global(requireContext()).getString("loc_suburb", "").orEmpty().ifBlank { getString(R.string.suburb_not_set) }
 
         findPreference<Preference>("import_provider")?.setOnPreferenceClickListener { pickFile.launch(arrayOf("application/json", "text/*", "*/*")); true }
         findPreference<Preference>("remove_provider")?.setOnPreferenceClickListener { removeProviderDialog(); true }
@@ -150,17 +240,7 @@ class GlobalSettingsFragment : PreferenceFragmentCompat() {
             if (url != null && url.startsWith("http")) startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
             true
         }
-        findPreference<Preference>("pictures_choose")?.setOnPreferenceClickListener { pickFolder.launch(null); true }
-        findPreference<Preference>("pictures_clear")?.apply {
-            summary = getString(R.string.pictures_count, Pictures.count(requireContext()))
-            setOnPreferenceClickListener {
-                Pictures.clear(requireContext())
-                summary = getString(R.string.pictures_count, 0)
-                WidgetUpdater.updateAll(requireContext())
-                toast(getString(R.string.pictures_removed))
-                true
-            }
-        }
+        findPreference<Preference>("resolve_suburb")?.setOnPreferenceClickListener { resolveSuburb(); true }
         findPreference<Preference>("use_device_location")?.setOnPreferenceClickListener {
             if (requireContext().checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) fillFromDevice()
             else askLocation.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -269,19 +349,6 @@ class GlobalSettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun importPictures(tree: Uri) {
-        val ctx = requireContext().applicationContext
-        toast(getString(R.string.pictures_importing))
-        Thread {
-            val r = Pictures.import(ctx, tree)
-            WidgetUpdater.updateAll(ctx)
-            activity?.runOnUiThread {
-                toast(getString(R.string.pictures_done, r.imported, r.skipped))
-                findPreference<Preference>("pictures_clear")?.summary = getString(R.string.pictures_count, Pictures.count(ctx))
-            }
-        }.start()
-    }
-
     private fun fillFromDevice() {
         val ctx = requireContext()
         val lm = ctx.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -291,6 +358,40 @@ class GlobalSettingsFragment : PreferenceFragmentCompat() {
         if (best == null) return toast(getString(R.string.location_unknown))
         findPreference<EditTextPreference>("loc_lat")?.text = String.format(Locale.ROOT, "%.4f", best.latitude)
         findPreference<EditTextPreference>("loc_lon")?.text = String.format(Locale.ROOT, "%.4f", best.longitude)
+        resolveSuburb()
+    }
+
+    /** Only reverse-geocode on user request. No tracking or repeated background polling. */
+    private fun resolveSuburb() {
+        val ctx = requireContext().applicationContext
+        val prefs = Prefs.global(ctx)
+        val lat = prefs.getString("loc_lat", "")?.replace(',', '.')?.toDoubleOrNull()
+        val lon = prefs.getString("loc_lon", "")?.replace(',', '.')?.toDoubleOrNull()
+        if (lat == null || lon == null || lat !in -90.0..90.0 || lon !in -180.0..180.0) {
+            toast(getString(R.string.location_invalid)); return
+        }
+        if (!Geocoder.isPresent()) { toast(getString(R.string.suburb_unavailable)); return }
+        Thread {
+            @Suppress("DEPRECATION")
+            val suburb = try {
+                val address = Geocoder(ctx, Locale.getDefault()).getFromLocation(lat, lon, 1)?.firstOrNull()
+                address?.locality?.takeIf { it.isNotBlank() }
+                    ?: address?.subLocality?.takeIf { it.isNotBlank() }
+                    ?: address?.adminArea?.takeIf { it.isNotBlank() }
+            } catch (_: java.io.IOException) { null } catch (_: IllegalArgumentException) { null }
+            activity?.runOnUiThread {
+                // Ignore an outdated result if the coordinates changed while geocoding.
+                if (prefs.getString("loc_lat", "")?.replace(',', '.')?.toDoubleOrNull() != lat ||
+                    prefs.getString("loc_lon", "")?.replace(',', '.')?.toDoubleOrNull() != lon) return@runOnUiThread
+                if (suburb.isNullOrBlank()) toast(getString(R.string.suburb_unavailable))
+                else {
+                    prefs.edit().putString("loc_suburb", suburb)
+                        .putString("loc_suburb_coordinates", "$lat,$lon").apply()
+                    findPreference<Preference>("resolved_suburb")?.summary = suburb
+                    WidgetUpdater.updateAll(ctx)
+                }
+            }
+        }.start()
     }
 
     private fun toast(msg: String) = Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
