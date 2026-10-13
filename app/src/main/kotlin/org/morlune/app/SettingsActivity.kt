@@ -13,7 +13,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -40,7 +39,6 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()   // Android 15 forces this anyway; doing it explicitly lets us pad for the system bars
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
