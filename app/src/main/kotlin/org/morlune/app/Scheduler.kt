@@ -14,6 +14,7 @@ import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import org.morlune.engine.ProviderException
+import java.io.IOException
 import java.text.DateFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit
@@ -66,13 +67,13 @@ class WeatherWorker(context: Context, params: WorkerParameters) : Worker(context
             Log.w("Morlune", "fetch failed: ${e.message}")
             report("Failed: ${e.message}")
             if (runAttemptCount < 2) Result.retry() else Result.success()   // keep showing the last good data
-        } catch (e: Throwable) {
+        } catch (e: Exception) {
             // Anything unexpected must still leave a visible reason behind.
             Log.e("Morlune", "fetch crashed", e)
             val root = generateSequence<Throwable>(e) { it.cause }.last()   // ExceptionInInitializerError hides the real cause
             val where = root.stackTrace.firstOrNull { it.className.startsWith("org.morlune") }?.let { " at ${it.className.substringAfterLast('.')}.${it.methodName}:${it.lineNumber}" }.orEmpty()
             report("Crashed: ${root.javaClass.simpleName}: ${root.message}$where")
-            Result.success()
+            if (runAttemptCount < 2 && (e is IOException || e.cause is IOException)) Result.retry() else Result.failure()
         }
     }
 }
