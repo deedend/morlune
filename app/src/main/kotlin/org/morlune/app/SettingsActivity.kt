@@ -11,10 +11,15 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
@@ -35,8 +40,20 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()   // Android 15 forces this anyway; doing it explicitly lets us pad for the system bars
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        toolbar.title = getString(R.string.app_name)
+        val container = findViewById<View>(R.id.settings_container)
+        val barHeight = (56 * resources.displayMetrics.density).toInt()
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.settings_root)) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            toolbar.setPadding(bars.left, bars.top, bars.right, 0)
+            toolbar.layoutParams = toolbar.layoutParams.apply { height = barHeight + bars.top }
+            container.setPadding(bars.left, 0, bars.right, bars.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
         widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
         val globalOnly = intent.getBooleanExtra(EXTRA_GLOBAL, false) || widgetId == AppWidgetManager.INVALID_APPWIDGET_ID
 
@@ -52,7 +69,6 @@ class SettingsActivity : AppCompatActivity() {
             }
             supportFragmentManager.beginTransaction().replace(R.id.settings_container, fragment).commit()
         }
-        title = getString(R.string.app_name)
     }
 
     override fun onPause() {
@@ -88,6 +104,9 @@ class WidgetSettingsFragment : PreferenceFragmentCompat() {
                 entries = (listOf(getString(R.string.default_app)) + apps.map { it.first }).toTypedArray()
                 entryValues = (listOf("") + apps.map { it.second }).toTypedArray()
             }
+        }
+        findPreference<androidx.preference.EditTextPreference>("weather_url")?.setOnBindEditTextListener {
+            it.inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_URI
         }
         findPreference<Preference>("open_global")?.setOnPreferenceClickListener {
             startActivity(Intent(requireContext(), SettingsActivity::class.java).putExtra(SettingsActivity.EXTRA_GLOBAL, true))

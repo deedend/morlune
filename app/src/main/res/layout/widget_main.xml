@@ -81,6 +81,7 @@
                 android:id="@+id/weather_area"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:minWidth="96dp"
                 android:gravity="end"
                 android:orientation="vertical">
 

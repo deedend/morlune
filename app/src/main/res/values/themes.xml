@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Morlune" parent="Theme.AppCompat.DayNight" />
+    <style name="Theme.Morlune" parent="Theme.AppCompat.DayNight.NoActionBar" />
     <style name="WidgetShadowText">
         <item name="android:shadowColor">#99000000</item>
         <item name="android:shadowRadius">3</item>

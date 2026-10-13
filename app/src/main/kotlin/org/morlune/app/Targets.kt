@@ -33,9 +33,17 @@ object Targets {
         return activity(ctx, widgetId * 10 + 2, (launcher(ctx, pkg) ?: fallback).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
+    /** "bom.gov.au" typed without a scheme becomes https://bom.gov.au; blank or non-web values give null. */
+    fun normalizeUrl(raw: String?): String? {
+        val t = raw?.trim().orEmpty()
+        if (t.isEmpty()) return null
+        val full = if (t.contains("://")) t else "https://$t"
+        return full.takeIf { it.startsWith("https://") || it.startsWith("http://") }
+    }
+
     fun weather(ctx: Context, widgetId: Int, url: String?): PendingIntent {
-        val ok = url != null && (url.startsWith("https://") || url.startsWith("http://"))
-        val intent = if (ok) Intent(Intent.ACTION_VIEW, Uri.parse(url)) else settings(ctx, widgetId)
+        val web = normalizeUrl(url)
+        val intent = if (web != null) Intent(Intent.ACTION_VIEW, Uri.parse(web)) else settings(ctx, widgetId)
         return activity(ctx, widgetId * 10 + 3, intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 }

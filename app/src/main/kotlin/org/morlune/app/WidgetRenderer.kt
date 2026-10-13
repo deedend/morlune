@@ -46,6 +46,8 @@ object WidgetRenderer {
         rv.setOnClickPendingIntent(R.id.clock_area, Targets.clock(ctx, widgetId, s.clockApp))
         rv.setOnClickPendingIntent(R.id.weather_area, Targets.weather(ctx, widgetId, url))
         rv.setOnClickPendingIntent(R.id.forecast, Targets.weather(ctx, widgetId, url))
+        // Any empty part of the widget (the picture behind everything) also opens the weather page.
+        rv.setOnClickPendingIntent(R.id.panel, Targets.weather(ctx, widgetId, url))
         rv.setOnClickPendingIntent(R.id.calendar_area, Targets.calendar(ctx, widgetId, s.calendarApp, now.toInstant().toEpochMilli()))
         return rv
     }
