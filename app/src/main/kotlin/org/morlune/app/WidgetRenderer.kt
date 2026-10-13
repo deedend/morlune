@@ -95,7 +95,13 @@ object WidgetRenderer {
         listOf(R.id.temp, R.id.minmax, R.id.rain).forEach { rv.setTextColor(it, s.textColor) }
         if (data == null) {
             rv.setTextViewText(R.id.temp, "–")
-            rv.setTextViewText(R.id.minmax, ctx.getString(if (g.location() == null) R.string.no_weather_yet else R.string.updating))
+            val reason = Prefs.global(ctx).getString("last_status", null)?.takeIf { it.isNotBlank() }
+            val text = when {
+                g.location() == null -> ctx.getString(R.string.no_weather_yet)
+                reason != null -> if (reason.length > 48) reason.take(47) + "…" else reason
+                else -> ctx.getString(R.string.updating)
+            }
+            rv.setTextViewText(R.id.minmax, text)
             rv.setViewVisibility(R.id.rain, View.GONE)
             return
         }

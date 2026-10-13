@@ -49,18 +49,24 @@ class WeatherWorker(context: Context, params: WorkerParameters) : Worker(context
         val g = GlobalSettings.of(ctx)
         val location = g.location() ?: return Result.success()   // nothing to do until a location is set
         val status = Prefs.global(ctx).edit()
+        status.putString("last_status", "Fetching from ${g.providerId}…").commit()
         return try {
             val registry = ProviderStore.registry(ctx)
             val data = registry.fetchWithFallback(g.providerId, if (g.fallbackToOpenMeteo) "open-meteo" else null, location)
             WeatherCache.save(ctx, data)
             val note = data.warnings.firstOrNull()?.let { " ($it)" }.orEmpty()
-            status.putString("last_status", "Updated ${DateFormat.getTimeInstance(DateFormat.SHORT).format(Date())} from ${data.providerId}$note").apply()
+            status.putString("last_status", "Updated ${DateFormat.getTimeInstance(DateFormat.SHORT).format(Date())} from ${data.providerId}$note").commit()
             WidgetUpdater.updateAll(ctx)
             Result.success()
         } catch (e: ProviderException) {
             Log.w("Morlune", "fetch failed: ${e.message}")
-            status.putString("last_status", "Failed: ${e.message}").apply()
+            status.putString("last_status", "Failed: ${e.message}").commit()
             if (runAttemptCount < 2) Result.retry() else Result.success()   // keep showing the last good data
+        } catch (e: Exception) {
+            // Anything unexpected must still leave a visible reason behind.
+            Log.e("Morlune", "fetch crashed", e)
+            status.putString("last_status", "Failed: ${e.javaClass.simpleName}: ${e.message}").commit()
+            Result.success()
         }
     }
 }

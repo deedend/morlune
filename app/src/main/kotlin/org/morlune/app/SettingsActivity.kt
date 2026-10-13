@@ -100,7 +100,10 @@ class GlobalSettingsFragment : PreferenceFragmentCompat() {
     /** Keys whose change means the weather has to be fetched again (or rescheduled). */
     private val weatherKeys = setOf("provider_id", "fallback_open_meteo", "extra_values", "loc_lat", "loc_lon", "loc_zone", "loc_name", "refresh_minutes")
     private var dirty = false
-    private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key -> if (key in weatherKeys) dirty = true }
+    private val listener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
+        if (key in weatherKeys) dirty = true
+        if (key == "last_status") activity?.runOnUiThread { findPreference<Preference>("refresh_now")?.summary = prefs.getString("last_status", null) }
+    }
 
     private val pickFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) importProvider(uri) }
     private val askLocation = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->

@@ -13,6 +13,7 @@ class MorluneProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         ids.forEach { manager.updateAppWidget(it, WidgetRenderer.render(context, it)) }
         Scheduler.schedule(context)   // keeps the WorkManager job in step with the settings
+        if (WeatherCache.load(context) == null && GlobalSettings.of(context).location() != null) Scheduler.fetchNow(context)
     }
 
     override fun onEnabled(context: Context) {
