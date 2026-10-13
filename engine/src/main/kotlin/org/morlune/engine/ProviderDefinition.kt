@@ -84,7 +84,7 @@ object ProviderLoader {
     )
     private val fieldKeys = setOf("request", "path", "selector", "attr", "regex", "map", "unit", "scale", "offset", "negate", "dateFormat")
     private val knownDateFormats = setOf("iso-date", "instant-local", "epoch-s", "epoch-ms", "sequential")
-    private val idRegex = Regex("^[a-z0-9][a-z0-9-]*$")
+    private val idRegex = Regex("^[a-z0-9][a-z0-9\\-]*$")
 
     fun parse(text: String): ProviderDefinition {
         val root = try { Json.parse(text) } catch (e: JsonParseException) { throw ProviderException("provider file is not valid JSON: ${e.message}", e) }

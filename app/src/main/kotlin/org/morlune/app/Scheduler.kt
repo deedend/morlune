@@ -69,7 +69,9 @@ class WeatherWorker(context: Context, params: WorkerParameters) : Worker(context
         } catch (e: Throwable) {
             // Anything unexpected must still leave a visible reason behind.
             Log.e("Morlune", "fetch crashed", e)
-            report("Crashed: ${e.javaClass.simpleName}: ${e.message}")
+            val root = generateSequence<Throwable>(e) { it.cause }.last()   // ExceptionInInitializerError hides the real cause
+            val where = root.stackTrace.firstOrNull { it.className.startsWith("org.morlune") }?.let { " at ${it.className.substringAfterLast('.')}.${it.methodName}:${it.lineNumber}" }.orEmpty()
+            report("Crashed: ${root.javaClass.simpleName}: ${root.message}$where")
             Result.success()
         }
     }

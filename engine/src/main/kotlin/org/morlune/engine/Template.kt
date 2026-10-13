@@ -12,10 +12,21 @@ import java.util.Locale
  * Text values are URL-encoded.
  */
 object Template {
-    private val placeholder = Regex("\\{([^{}]+)}")
-
-    fun render(template: String, loc: Location, today: LocalDate): String =
-        placeholder.replace(template) { m -> resolve(m.groupValues[1].trim(), loc, today) }
+    /** Plain scanning, no regex: Android's regex engine rejects some patterns the JVM accepts. */
+    fun render(template: String, loc: Location, today: LocalDate): String {
+        val out = StringBuilder()
+        var i = 0
+        while (i < template.length) {
+            val open = template.indexOf('{', i)
+            if (open < 0) { out.append(template, i, template.length); break }
+            val close = template.indexOf('}', open + 1)
+            require(close > open) { "missing '}' in template: $template" }
+            out.append(template, i, open)
+            out.append(resolve(template.substring(open + 1, close).trim(), loc, today))
+            i = close + 1
+        }
+        return out.toString()
+    }
 
     private fun resolve(token: String, loc: Location, today: LocalDate): String {
         val key = token.substringBefore(':')

@@ -82,6 +82,8 @@ fun main() {
         val t = Template.render("a/{geohash:6}/{lat:2},{lon:2}/{name}/{extra.slug}/{today}",
             melbourne.copy(name = "Port Fairy", extra = mapOf("slug" to "a b")), LocalDate.of(2026, 10, 12))
         check("template renders", t.endsWith("/-37.81,144.96/Port%20Fairy/a%20b/2026-10-12"), { t })
+        check("template: no placeholders and edges", Template.render("plain", melbourne, LocalDate.now()) == "plain" && Template.render("{today}{today}", melbourne, LocalDate.of(2026, 1, 2)) == "2026-01-022026-01-02")
+        expectThrows("unclosed brace", "missing '}'") { Template.render("a{lat", melbourne, LocalDate.now()) }
         expectThrows("unknown placeholder", "unknown placeholder") { Template.render("{wat}", melbourne, LocalDate.now()) }
         expectThrows("missing extra", "no extra value") { Template.render("{extra.zz}", melbourne, LocalDate.now()) }
     }
