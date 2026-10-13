@@ -68,6 +68,10 @@ class WidgetSettings(private val p: SharedPreferences) {
     val clockSizeSp: Int get() = p.getInt("clock_size", 64)
     val dateSizeSp: Int get() = p.getInt("date_size", 15).coerceIn(10, 32)
     val forecastIconDp: Int get() = p.getInt("forecast_icon_size", 24).coerceIn(16, 48)
+    /** Keep the forecast icons proportional to the configured clock size. The icon
+     * slider specifies the size at the default 64sp clock setting. */
+    val scaledForecastIconDp: Int get() =
+        (forecastIconDp * (clockSizeSp.coerceIn(32, 96) / 64f)).toInt().coerceIn(16, 64)
     val datePattern: String get() = p.getString("date_pattern", "EEEE d MMMM").orEmpty().ifBlank { "EEEE d MMMM" }
     val showLocation: Boolean get() = p.getBoolean("show_location", true)
     val clockApp: String get() = p.getString("clock_app", "").orEmpty()

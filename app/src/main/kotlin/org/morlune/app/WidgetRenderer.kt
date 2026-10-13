@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package org.morlune.app
 
-import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.graphics.Color
 import android.text.SpannableString
@@ -79,16 +78,10 @@ object WidgetRenderer {
     }
 
     private fun clock(ctx: Context, widgetId: Int, rv: RemoteViews, s: WidgetSettings, g: GlobalSettings) {
-        // Android launchers supply the allocated height in dp. On a short widget reduce
-        // only the clock font, so the forecast and calendar retain useful space.
-        // Larger widgets allow the full user-configured clock size.
-        val heightDp = AppWidgetManager.getInstance(ctx).getAppWidgetOptions(widgetId)
-            .getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 180).coerceAtLeast(80)
-        val densityScale = ctx.resources.configuration.fontScale.coerceAtLeast(1f)
-        val headerBudgetDp = heightDp * 0.32f
-        val reservedDp = (s.dateSizeSp + if (s.showLocation) 16 else 0) * densityScale + 12
-        val clockSize = minOf(s.clockSizeSp.toFloat(),
-            ((headerBudgetDp - reservedDp) / (1.18f * densityScale)).coerceAtLeast(20f))
+        // The selected clock size is authoritative. The header is wrap_content, so it
+        // expands and contracts with the clock instead of silently clamping the size
+        // based on the launcher-reported widget height.
+        val clockSize = s.clockSizeSp.coerceIn(32, 96).toFloat()
         val (f12, f24) = when (s.clockStyle) {
             "24h" -> "HH:mm" to "HH:mm"
             "12h" -> "h:mm" to "h:mm"
@@ -148,7 +141,7 @@ object WidgetRenderer {
         if (days.isEmpty()) { rv.setViewVisibility(R.id.forecast, View.GONE); return }
         rv.setViewVisibility(R.id.forecast, View.VISIBLE)
         for (d in days) {
-            val cell = RemoteViews(ctx.packageName, forecastCellLayout(s.forecastIconDp))
+            val cell = RemoteViews(ctx.packageName, forecastCellLayout(s.scaledForecastIconDp))
             cell.setImageViewResource(R.id.fc_icon, Icons.iconRes(ctx, s.iconPack, d.condition, true))
             cell.setInt(R.id.fc_icon, "setColorFilter", s.iconColor)
             cell.setTextViewText(R.id.fc_temps, Fmt.range(d.minC, d.maxC))
@@ -157,7 +150,7 @@ object WidgetRenderer {
         }
     }
 
-    private fun forecastCellLayout(dp: Int): Int = when (((dp.coerceIn(16, 48) + 2) / 4) * 4) {
+    private fun forecastCellLayout(dp: Int): Int = when (((dp.coerceIn(16, 64) + 2) / 4) * 4) {
         16 -> R.layout.forecast_cell_16
         20 -> R.layout.forecast_cell_20
         24 -> R.layout.forecast_cell_24
@@ -167,6 +160,10 @@ object WidgetRenderer {
         40 -> R.layout.forecast_cell_40
         44 -> R.layout.forecast_cell_44
         48 -> R.layout.forecast_cell_48
+        52 -> R.layout.forecast_cell_52
+        56 -> R.layout.forecast_cell_56
+        60 -> R.layout.forecast_cell_60
+        64 -> R.layout.forecast_cell_64
         else -> R.layout.forecast_cell_24
     }
 
