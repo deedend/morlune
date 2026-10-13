@@ -26,6 +26,30 @@
         <Preference
             android:key="remove_provider"
             android:title="@string/pref_remove_provider" />
+        <Preference
+            android:key="data_credit"
+            android:title="@string/pref_data_credit" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_apple_cat">
+        <EditTextPreference
+            android:key="apple_team_id"
+            android:title="@string/pref_apple_team"
+            android:defaultValue=""
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:key="apple_service_id"
+            android:title="@string/pref_apple_service"
+            android:defaultValue=""
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:key="apple_key_id"
+            android:title="@string/pref_apple_key_id"
+            android:defaultValue=""
+            app:useSimpleSummaryProvider="true" />
+        <Preference
+            android:key="apple_import_key"
+            android:title="@string/pref_apple_key" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_location_cat">
@@ -53,6 +77,16 @@
             android:key="use_device_location"
             android:title="@string/pref_loc_device"
             android:summary="@string/pref_loc_device_summary" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_pictures_cat">
+        <Preference
+            android:key="pictures_choose"
+            android:title="@string/pref_pictures_choose"
+            android:summary="@string/pref_pictures_summary" />
+        <Preference
+            android:key="pictures_clear"
+            android:title="@string/pref_pictures_clear" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_refresh_cat">

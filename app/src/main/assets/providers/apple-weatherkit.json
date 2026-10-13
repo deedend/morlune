@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "id": "apple-weatherkit",
+  "name": "Apple WeatherKit (needs an Apple developer account)",
+  "description": "Apple's official forecast API. You need your own Apple Developer Program membership, a Services ID and a WeatherKit key; enter them in the settings.",
+  "attribution": "Apple Weather. Data sources: https://weatherkit.apple.com/legal-attribution.html",
+  "requests": [
+    {
+      "id": "weather",
+      "url": "https://weatherkit.apple.com/api/v1/weather/en/{lat:4}/{lon:4}?dataSets=currentWeather,forecastDaily&timezone={tz}",
+      "type": "json",
+      "headers": { "Authorization": "Bearer {token.apple}" }
+    }
+  ],
+  "current": {
+    "temperature": "$.currentWeather.temperature",
+    "feelsLike": "$.currentWeather.temperatureApparent",
+    "rain": "$.forecastDaily.days[0].precipitationAmount",
+    "condition": { "path": "$.currentWeather.conditionCode", "map": "apple" },
+    "isDay": "$.currentWeather.daylight"
+  },
+  "daily": {
+    "layout": "rows",
+    "items": "$.forecastDaily.days[*]",
+    "limit": 7,
+    "fields": {
+      "date": { "path": "$.forecastStart", "dateFormat": "instant-local" },
+      "min": "$.temperatureMin",
+      "max": "$.temperatureMax",
+      "condition": { "path": "$.conditionCode", "map": "apple" },
+      "rain": "$.precipitationAmount",
+      "rainChance": { "path": "$.precipitationChance", "scale": 100 }
+    }
+  },
+  "conditionMaps": {
+    "apple": {
+      "THUNDERSTORM": ["ScatteredThunderstorms", "IsolatedThunderstorms", "Thunderstorms", "StrongStorms", "TropicalStorm", "Hurricane"],
+      "HAIL": ["Hail"],
+      "SNOW": ["Flurries", "SunFlurries", "Snow", "HeavySnow", "Blizzard", "BlowingSnow", "WintryMix", "Sleet"],
+      "FROST": ["Frigid"],
+      "HEAVY_RAIN": ["HeavyRain"],
+      "SHOWERS": ["ScatteredShowers", "SunShowers"],
+      "DRIZZLE": ["Drizzle", "FreezingDrizzle"],
+      "RAIN": ["Rain", "FreezingRain"],
+      "FOG": ["~fog"],
+      "HAZE": ["Haze", "Smoke"],
+      "DUST": ["Dust"],
+      "WIND": ["Breezy", "Windy"],
+      "PARTLY_CLOUDY": ["PartlyCloudy"],
+      "CLOUDY": ["MostlyCloudy", "Cloudy"],
+      "CLEAR": ["Clear", "MostlyClear", "Hot"]
+    }
+  }
+}

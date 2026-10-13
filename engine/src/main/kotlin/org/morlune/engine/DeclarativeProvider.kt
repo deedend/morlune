@@ -16,6 +16,7 @@ class DeclarativeProvider(
     private val fetcher: HttpFetcher,
     private val htmlParser: HtmlParser? = null,
     private val now: () -> Instant = Instant::now,
+    private val tokens: TokenSource? = null,
 ) : WeatherProvider {
 
     override val id: String get() = definition.id
@@ -56,8 +57,8 @@ class DeclarativeProvider(
         val url: String
         val headers: Map<String, String>
         try {
-            url = Template.render(req.url, loc, today)
-            headers = req.headers.mapValues { Template.render(it.value, loc, today) }
+            url = Template.render(req.url, loc, today, tokens)
+            headers = req.headers.mapValues { Template.render(it.value, loc, today, tokens) }
         } catch (e: IllegalArgumentException) {
             throw ProviderException(e.message ?: "bad template", e)
         }
@@ -237,13 +238,17 @@ class DeclarativeProvider(
 }
 
 /** Keeps providers by id. Declarative ones come from JSON text; hand-written Kotlin providers can be added directly. */
-class ProviderRegistry(private val fetcher: HttpFetcher, private val htmlParser: HtmlParser? = JsoupHtmlParser()) {
+class ProviderRegistry(
+    private val fetcher: HttpFetcher,
+    private val htmlParser: HtmlParser? = JsoupHtmlParser(),
+    private val tokens: TokenSource? = null,
+) {
     private val providers = LinkedHashMap<String, WeatherProvider>()
 
     fun add(provider: WeatherProvider) { providers[provider.id] = provider }
 
     fun addFromJson(text: String): WeatherProvider =
-        DeclarativeProvider(ProviderLoader.parse(text), fetcher, htmlParser).also { add(it) }
+        DeclarativeProvider(ProviderLoader.parse(text), fetcher, htmlParser, tokens = tokens).also { add(it) }
 
     fun get(id: String): WeatherProvider? = providers[id]
 

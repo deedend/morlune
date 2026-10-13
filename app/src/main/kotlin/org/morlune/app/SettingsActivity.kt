@@ -99,9 +99,10 @@ class WidgetSettingsFragment : PreferenceFragmentCompat() {
         setPreferencesFromResource(R.xml.prefs_widget, rootKey)
 
         val apps = launcherApps(requireContext())
-        for (key in listOf("clock_app", "calendar_app")) {
+        for (key in listOf("clock_app", "calendar_app", "weather_app", "forecast_app")) {
             findPreference<ListPreference>(key)?.apply {
-                entries = (listOf(getString(R.string.default_app)) + apps.map { it.first }).toTypedArray()
+                val first = getString(if (key == "forecast_app") R.string.same_as_weather else R.string.default_app)
+                entries = (listOf(first) + apps.map { it.first }).toTypedArray()
                 entryValues = (listOf("") + apps.map { it.second }).toTypedArray()
             }
         }
@@ -117,14 +118,19 @@ class WidgetSettingsFragment : PreferenceFragmentCompat() {
 
 class GlobalSettingsFragment : PreferenceFragmentCompat() {
     /** Keys whose change means the weather has to be fetched again (or rescheduled). */
-    private val weatherKeys = setOf("provider_id", "fallback_open_meteo", "extra_values", "loc_lat", "loc_lon", "loc_zone", "loc_name", "refresh_minutes")
+    private val weatherKeys = setOf("provider_id", "fallback_open_meteo", "extra_values", "loc_lat", "loc_lon", "loc_zone", "loc_name", "refresh_minutes", "apple_team_id", "apple_service_id", "apple_key_id")
     private var dirty = false
     private val listener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
         if (key in weatherKeys) dirty = true
-        if (key == "last_status") activity?.runOnUiThread { findPreference<Preference>("refresh_now")?.summary = prefs.getString("last_status", null) }
+        if (key == "last_status") activity?.runOnUiThread {
+            findPreference<Preference>("refresh_now")?.summary = prefs.getString("last_status", null)
+            showCredit()
+        }
     }
 
     private val pickFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) importProvider(uri) }
+    private val pickFolder = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri -> if (uri != null) importPictures(uri) }
+    private val pickAppleKey = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) importAppleKey(uri) }
     private val askLocation = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) fillFromDevice() else toast(getString(R.string.location_permission_denied))
     }
@@ -136,6 +142,27 @@ class GlobalSettingsFragment : PreferenceFragmentCompat() {
 
         findPreference<Preference>("import_provider")?.setOnPreferenceClickListener { pickFile.launch(arrayOf("application/json", "text/*", "*/*")); true }
         findPreference<Preference>("remove_provider")?.setOnPreferenceClickListener { removeProviderDialog(); true }
+        findPreference<Preference>("apple_import_key")?.apply {
+            summary = getString(if (AppleTokens.hasKey(requireContext())) R.string.apple_key_loaded else R.string.apple_key_missing)
+            setOnPreferenceClickListener { pickAppleKey.launch(arrayOf("*/*")); true }
+        }
+        showCredit()
+        findPreference<Preference>("data_credit")?.setOnPreferenceClickListener {
+            val url = WeatherCache.load(requireContext())?.let { d -> firstUrl(d.attribution) ?: d.webUrl }
+            if (url != null && url.startsWith("http")) startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+            true
+        }
+        findPreference<Preference>("pictures_choose")?.setOnPreferenceClickListener { pickFolder.launch(null); true }
+        findPreference<Preference>("pictures_clear")?.apply {
+            summary = getString(R.string.pictures_count, Pictures.count(requireContext()))
+            setOnPreferenceClickListener {
+                Pictures.clear(requireContext())
+                summary = getString(R.string.pictures_count, 0)
+                WidgetUpdater.updateAll(requireContext())
+                toast(getString(R.string.pictures_removed))
+                true
+            }
+        }
         findPreference<Preference>("use_device_location")?.setOnPreferenceClickListener {
             if (requireContext().checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) fillFromDevice()
             else askLocation.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -213,6 +240,50 @@ class GlobalSettingsFragment : PreferenceFragmentCompat() {
             .setNegativeButton(R.string.cancel, null).show()
     }
 
+    /** Shows who the current weather data comes from (providers ask for this to be visible). */
+    private fun showCredit() {
+        val data = WeatherCache.load(requireContext())
+        findPreference<Preference>("data_credit")?.summary = data?.attribution?.takeIf { it.isNotBlank() } ?: data?.providerId ?: getString(R.string.credit_none)
+    }
+
+    private fun firstUrl(text: String?): String? {
+        val start = text?.indexOf("https://") ?: -1
+        if (text == null || start < 0) return null
+        return text.substring(start).takeWhile { !it.isWhitespace() }
+    }
+
+    private fun importAppleKey(uri: Uri) {
+        val ctx = requireContext()
+        try {
+            val text = ctx.contentResolver.openInputStream(uri)?.bufferedReader()?.use { r ->
+                val buf = CharArray(MAX_KEY_CHARS + 1)
+                val n = r.read(buf)
+                if (n > MAX_KEY_CHARS) throw ProviderException("file is too large for a key")
+                if (n <= 0) "" else String(buf, 0, n)
+            } ?: throw ProviderException("could not read the file")
+            AppleTokens.saveKey(ctx, text)
+            findPreference<Preference>("apple_import_key")?.summary = getString(R.string.apple_key_loaded)
+            dirty = true
+        } catch (e: ProviderException) {
+            AlertDialog.Builder(ctx).setTitle(R.string.pref_apple_key).setMessage(getString(R.string.apple_key_rejected, e.message.orEmpty())).setPositiveButton(R.string.ok, null).show()
+        } catch (e: java.io.IOException) {
+            toast(getString(R.string.apple_key_rejected, e.message.orEmpty()))
+        }
+    }
+
+    private fun importPictures(tree: Uri) {
+        val ctx = requireContext().applicationContext
+        toast(getString(R.string.pictures_importing))
+        Thread {
+            val r = Pictures.import(ctx, tree)
+            WidgetUpdater.updateAll(ctx)
+            activity?.runOnUiThread {
+                toast(getString(R.string.pictures_done, r.imported, r.skipped))
+                findPreference<Preference>("pictures_clear")?.summary = getString(R.string.pictures_count, Pictures.count(ctx))
+            }
+        }.start()
+    }
+
     private fun fillFromDevice() {
         val ctx = requireContext()
         val lm = ctx.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -226,5 +297,5 @@ class GlobalSettingsFragment : PreferenceFragmentCompat() {
 
     private fun toast(msg: String) = Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
 
-    private companion object { const val MAX_PROVIDER_CHARS = 200_000 }
+    private companion object { const val MAX_PROVIDER_CHARS = 200_000; const val MAX_KEY_CHARS = 20_000 }
 }

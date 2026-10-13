@@ -10,9 +10,10 @@ Services, no accounts, no tracking.
   min/max and rain.
 - Forecast strip: icon plus min/max for the coming days.
 - Calendar: reads the system calendar (colours as in your calendar app), as an agenda list or a 7-day week.
-- Weather background picture, opacity settable. Changes when new weather is fetched.
-- Taps: clock opens an app you choose, the calendar opens the calendar app you choose, the weather opens a web page
-  you choose (default: the provider's page).
+- Weather background picture, opacity settable, changing when new weather is fetched. Built-in placeholders, or your own
+  photos from a folder you pick (matched to the weather by their names, see docs/IMAGES.md).
+- Taps: clock opens an app you choose, the calendar opens the calendar app you choose, the weather opens a separate weather
+  app you choose (for example Weawow) or, if none is set, a web page (default: the provider's page).
 - Settings per widget: clock style and size, date format, colours, background opacity, icon colour and set, forecast
   days, agenda rows, week start, events per day.
 - Global settings: weather provider, location, update interval (1h, 2h, 6h, 12h, once a day).
@@ -24,6 +25,7 @@ Providers are JSON files, no code needed: see [docs/PROVIDERS.md](docs/PROVIDERS
 - `bom-au`: Australia's Bureau of Meteorology, using the JSON endpoints behind weather.bom.gov.au. These are
   undocumented and can change; BOM's terms restrict heavy automated use, so keep the update interval sensible.
 - `open-meteo`: worldwide, documented, no key. Used as the automatic fallback.
+- `apple-weatherkit`: Apple's forecast API. Needs your own Apple developer account, see [docs/APPLE.md](docs/APPLE.md).
 
 Import your own from the settings, or add it to `app/src/main/assets/providers/` and send a pull request.
 For sources that cannot be described in JSON, implement `WeatherProvider` in Kotlin.

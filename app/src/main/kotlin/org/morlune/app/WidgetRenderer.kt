@@ -11,6 +11,7 @@ import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
 import org.morlune.engine.AgendaRow
+import org.morlune.engine.Backgrounds
 import org.morlune.engine.CalEvent
 import org.morlune.engine.CalendarLogic
 import org.morlune.engine.Condition
@@ -44,10 +45,10 @@ object WidgetRenderer {
 
         val url = s.weatherUrl.ifBlank { data?.webUrl.orEmpty() }.ifBlank { null }
         rv.setOnClickPendingIntent(R.id.clock_area, Targets.clock(ctx, widgetId, s.clockApp))
-        rv.setOnClickPendingIntent(R.id.weather_area, Targets.weather(ctx, widgetId, url))
-        rv.setOnClickPendingIntent(R.id.forecast, Targets.weather(ctx, widgetId, url))
+        rv.setOnClickPendingIntent(R.id.weather_area, Targets.weather(ctx, widgetId, s.weatherApp, url))
+        rv.setOnClickPendingIntent(R.id.forecast, Targets.weather(ctx, widgetId, s.forecastApp.ifBlank { s.weatherApp }, url, slot = 4))
         // Any empty part of the widget (the picture behind everything) also opens the weather page.
-        rv.setOnClickPendingIntent(R.id.panel, Targets.weather(ctx, widgetId, url))
+        rv.setOnClickPendingIntent(R.id.panel, Targets.weather(ctx, widgetId, s.weatherApp, url))
         rv.setOnClickPendingIntent(R.id.calendar_area, Targets.calendar(ctx, widgetId, s.calendarApp, now.toInstant().toEpochMilli()))
         return rv
     }
@@ -57,13 +58,21 @@ object WidgetRenderer {
     private fun background(ctx: Context, rv: RemoteViews, s: WidgetSettings, data: WeatherData?, now: ZonedDateTime) {
         rv.setInt(R.id.panel, "setColorFilter", s.bgColor or (0xFF shl 24))
         rv.setInt(R.id.panel, "setImageAlpha", alpha255(s.bgOpacityPct))
-        val res = if (s.imageEnabled && data != null)
-            Icons.backgroundRes(ctx, data.backgroundCondition, Fmt.isDay(data.current, now.hour)) else 0
-        if (res != 0) {
-            rv.setViewVisibility(R.id.weather_bg, View.VISIBLE)
-            rv.setImageViewResource(R.id.weather_bg, res)
-            rv.setInt(R.id.weather_bg, "setImageAlpha", alpha255(s.imageOpacityPct))
-        } else {
+        var shown = false
+        if (s.imageEnabled && data != null) {
+            val isDay = Fmt.isDay(data.current, now.hour)
+            // Optional: the user's own pictures (a new one is picked at every weather fetch). Otherwise, or if none
+            // matches, the built-in set is used.
+            val own = if (s.ownPictures) Pictures.pick(ctx, Backgrounds.key(data.backgroundCondition, isDay), data.fetchedAtEpochMs / 1000) else null
+            val res = if (own == null) Icons.backgroundRes(ctx, data.backgroundCondition, isDay) else 0
+            if (own != null || res != 0) {
+                rv.setViewVisibility(R.id.weather_bg, View.VISIBLE)
+                if (own != null) rv.setImageViewBitmap(R.id.weather_bg, own) else rv.setImageViewResource(R.id.weather_bg, res)
+                rv.setInt(R.id.weather_bg, "setImageAlpha", alpha255(s.imageOpacityPct))
+                shown = true
+            }
+        }
+        if (!shown) {
             rv.setViewVisibility(R.id.weather_bg, View.GONE)
         }
     }

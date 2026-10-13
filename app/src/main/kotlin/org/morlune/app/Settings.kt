@@ -67,10 +67,14 @@ class WidgetSettings(private val p: SharedPreferences) {
     val clockApp: String get() = p.getString("clock_app", "").orEmpty()
 
     val imageEnabled: Boolean get() = p.getBoolean("image_enabled", true)
+    val ownPictures: Boolean get() = p.getBoolean("own_pictures", false)
     val imageOpacityPct: Int get() = p.getInt("image_opacity", 70)
     val iconPack: String get() = p.getString("icon_pack", "simple").orEmpty().ifBlank { "simple" }
     val iconColor: Int get() = p.getInt("icon_color", Color.WHITE)
     val forecastDays: Int get() = p.getInt("forecast_days", 5)
+    val weatherApp: String get() = p.getString("weather_app", "").orEmpty()
+    /** App for the forecast icons; blank means the same as [weatherApp]. */
+    val forecastApp: String get() = p.getString("forecast_app", "").orEmpty()
     val weatherUrl: String get() = p.getString("weather_url", "").orEmpty().trim()
 
     val calendarMode: String get() = p.getString("calendar_mode", "agenda").orEmpty()

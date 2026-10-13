@@ -24,8 +24,9 @@ If a source is too awkward for this format, implement `WeatherProvider` in Kotli
 
 ## Placeholders (URLs and headers)
 
-`{lat}` `{lon}` `{lat:N}` `{lon:N}` (N decimals), `{geohash:N}`, `{name}`, `{extra.key}`, `{today}`.
-URLs must be https.
+`{lat}` `{lon}` `{lat:N}` `{lon:N}` (N decimals), `{geohash:N}`, `{name}`, `{tz}` (time zone, e.g. Australia/Melbourne),
+`{extra.key}`, `{today}`, and `{token.NAME}` for secrets the app makes for you (today only `{token.apple}`, see
+`docs/APPLE.md`). URLs must be https.
 
 ## Fields
 

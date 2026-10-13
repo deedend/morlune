@@ -41,9 +41,11 @@ object Targets {
         return full.takeIf { it.startsWith("https://") || it.startsWith("http://") }
     }
 
-    fun weather(ctx: Context, widgetId: Int, url: String?): PendingIntent {
+    /** An app chosen in the settings wins (for example Weawow); if it is missing or none is set, the web page opens. */
+    fun weather(ctx: Context, widgetId: Int, pkg: String, url: String?, slot: Int = 3): PendingIntent {
         val web = normalizeUrl(url)
-        val intent = if (web != null) Intent(Intent.ACTION_VIEW, Uri.parse(web)) else settings(ctx, widgetId)
-        return activity(ctx, widgetId * 10 + 3, intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        val intent = launcher(ctx, pkg)
+            ?: if (web != null) Intent(Intent.ACTION_VIEW, Uri.parse(web)) else settings(ctx, widgetId)
+        return activity(ctx, widgetId * 10 + slot, intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 }

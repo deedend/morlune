@@ -21,8 +21,10 @@ private fun <T> expectThrows(name: String, contains: String, block: () -> T) {
 
 private class FakeFetcher(private val routes: Map<String, HttpResult>) : HttpFetcher {
     val requested = mutableListOf<String>()
+    val sentHeaders = mutableListOf<Map<String, String>>()
     override fun get(url: String, headers: Map<String, String>): HttpResult {
         requested += url
+        sentHeaders += headers
         return routes.entries.firstOrNull { url.startsWith(it.key) }?.value ?: HttpResult(404, "")
     }
 }
@@ -49,6 +51,14 @@ private const val OPEN_METEO = """{"current":{"temperature_2m":13.5,"apparent_te
  "daily":{"time":["2026-10-12","2026-10-13","2026-10-14"],
   "weather_code":[61,2,95],"temperature_2m_max":[18.0,21.5,24.0],"temperature_2m_min":[9.0,8.5,11.0],
   "precipitation_sum":[5.2,0.0,12.4],"precipitation_probability_max":[85,10,90]}}"""
+
+private const val APPLE_WEATHER = """{"currentWeather":{"name":"CurrentWeather","asOf":"2026-10-12T01:00:00Z","conditionCode":"PartlyCloudy","daylight":true,
+ "temperature":16.4,"temperatureApparent":15.1,"precipitationIntensity":0.0},
+ "forecastDaily":{"name":"DailyForecast","days":[
+  {"forecastStart":"2026-10-11T13:00:00Z","conditionCode":"ScatteredShowers","temperatureMax":19.2,"temperatureMin":9.1,"precipitationAmount":2.4,"precipitationChance":0.65},
+  {"forecastStart":"2026-10-12T13:00:00Z","conditionCode":"Foggy","temperatureMax":22.0,"temperatureMin":10.5,"precipitationAmount":0.0,"precipitationChance":0.05},
+  {"forecastStart":"2026-10-13T13:00:00Z","conditionCode":"IsolatedThunderstorms","temperatureMax":27.3,"temperatureMin":12.0,"precipitationAmount":7.9,"precipitationChance":0.8},
+  {"forecastStart":"2026-10-14T13:00:00Z","conditionCode":"SomethingNew","temperatureMax":18.0,"temperatureMin":8.0,"precipitationAmount":0.0,"precipitationChance":0.2}]}}"""
 
 private const val HTML_PAGE = """<html><body>
 <div id="now"><span class="temp">Now 18.4°C</span><span class="desc">Partly cloudy</span></div>
@@ -255,6 +265,75 @@ fun main() {
         val (shown, hidden) = CalendarLogic.chips(days[0], 2)
         check("chips: 3 events, max 2 -> 1 shown + 2 hidden", shown.size == 1 && hidden == 2)
         check("chips: fits", CalendarLogic.chips(days[3], 5).second == 0)
+    }
+
+    println("Picture names")
+    run {
+        fun t(path: String) = PictureNames.classify(path)
+        check("folder + file", t("Rain/heavy_night_3.jpg") == PictureNames.Tag("heavy_rain", "night"), { t("Rain/heavy_night_3.jpg").toString() })
+        check("plain rain", t("rain1.jpg") == PictureNames.Tag("rain", "any"))
+        check("sentence style", t("Clear sky - morning.JPG") == PictureNames.Tag("clear", "day"))
+        check("partly before cloudy", t("partly-cloudy-day.png")?.group == "partly_cloudy" && t("Cloudy/IMG_1.jpg")?.group == "cloudy")
+        check("snow beats storm", t("snow storm.jpg")?.group == "snow" && t("thunderstorm_night.jpg")?.group == "storm")
+        check("fog words", t("fog/dawn.jpg")?.group == "fog" && t("hazy.jpg")?.group == "fog")
+        check("no weather word", t("IMG_20240101_123456.jpg") == null && t("holiday/beach.jpg") == null)
+        check("sunday is not sun", t("sunday.jpg") == null)
+        val c = listOf("day" to "a", "night" to "b", "any" to "c", "day" to "d")
+        check("choose exact", PictureNames.choose(c, "night", 5L) == "b" && PictureNames.choose(c, "day", 0L) == "a" && PictureNames.choose(c, "day", 1L) == "d")
+        check("choose any then other", PictureNames.choose(listOf("any" to "x", "day" to "y"), "night", 9L) == "x" && PictureNames.choose(listOf("day" to "y"), "night", 3L) == "y")
+        check("choose empty / negative seed", PictureNames.choose(emptyList<Pair<String, String>>(), "day", 1L) == null && PictureNames.choose(c, "day", -3L) != null)
+    }
+
+
+    println("Apple WeatherKit")
+    run {
+        val kp = java.security.KeyPairGenerator.getInstance("EC").apply { initialize(java.security.spec.ECGenParameterSpec("secp256r1")) }.generateKeyPair()
+        val pem = "-----BEGIN PRIVATE KEY-----\n" + java.util.Base64.getMimeEncoder(64, "\n".toByteArray()).encodeToString(kp.private.encoded) + "\n-----END PRIVATE KEY-----\n"
+        val jwt = AppleJwt.create("TEAM123456", "com.example.weather", "KEY1234567", pem, 1_700_000_000L)
+        val parts = jwt.split(".")
+        check("jwt has 3 parts", parts.size == 3)
+        fun decode(x: String) = String(java.util.Base64.getUrlDecoder().decode(x), Charsets.UTF_8)
+        val header = Json.parse(decode(parts[0])) as Map<*, *>
+        val payload = Json.parse(decode(parts[1])) as Map<*, *>
+        check("jwt header", header["alg"] == "ES256" && header["kid"] == "KEY1234567" && header["id"] == "TEAM123456.com.example.weather", { header.toString() })
+        check("jwt payload", payload["iss"] == "TEAM123456" && payload["sub"] == "com.example.weather" && payload["iat"] == 1_700_000_000.0 && payload["exp"] == 1_700_003_600.0, { payload.toString() })
+        val raw = java.util.Base64.getUrlDecoder().decode(parts[2])
+        check("signature is 64 raw bytes", raw.size == 64)
+        fun rawToDer(r: ByteArray): ByteArray {
+            fun num(v: ByteArray): ByteArray { var i = 0; while (i < v.size - 1 && v[i] == 0.toByte()) i++; val t = v.copyOfRange(i, v.size); return if (t[0] < 0) byteArrayOf(0) + t else t }
+            val a = num(r.copyOfRange(0, 32)); val b = num(r.copyOfRange(32, 64))
+            val body = byteArrayOf(0x02, a.size.toByte()) + a + byteArrayOf(0x02, b.size.toByte()) + b
+            return byteArrayOf(0x30, body.size.toByte()) + body
+        }
+        val verified = java.security.Signature.getInstance("SHA256withECDSA").run {
+            initVerify(kp.public); update((parts[0] + "." + parts[1]).toByteArray(Charsets.US_ASCII)); verify(rawToDer(raw))
+        }
+        check("signature verifies with the public key", verified)
+        // DER edge cases: short numbers and a leading 0x00 pad
+        val der = byteArrayOf(0x30, 0x08, 0x02, 0x02, 0x00, 0x90.toByte(), 0x02, 0x02, 0x01, 0x02)
+        val r2 = AppleJwt.derToRaw(der, 4)
+        check("derToRaw pads and strips", r2.toList() == listOf<Byte>(0, 0, 0, 0x90.toByte(), 0, 0, 1, 2), { r2.toList().toString() })
+        expectThrows("blank ids rejected", "Team ID") { AppleJwt.create("", "s", "k", pem, 1L) }
+        expectThrows("bad key rejected", ".p8") { AppleJwt.create("t", "s", "k", "not a key", 1L) }
+
+        val f = FakeFetcher(mapOf("https://weatherkit.apple.com/" to HttpResult(200, APPLE_WEATHER)))
+        val def = ProviderLoader.parse(providerJson("apple-weatherkit.json"))
+        val tokens = TokenSource { name -> if (name == "apple") "TESTJWT" else throw ProviderException("unknown token") }
+        val w = DeclarativeProvider(def, f, now = fixedNow, tokens = tokens).fetch(melbourne)
+        check("url has coordinates and zone", f.requested.single() == "https://weatherkit.apple.com/api/v1/weather/en/-37.8136/144.9631?dataSets=currentWeather,forecastDaily&timezone=Australia%2FMelbourne", { f.requested.toString() })
+        check("bearer token sent", f.sentHeaders.single()["Authorization"] == "Bearer TESTJWT", { f.sentHeaders.toString() })
+        check("current", w.current?.temperatureC == 16.4 && w.current?.feelsLikeC == 15.1 && w.current?.condition == Condition.PARTLY_CLOUDY && w.current?.isDay == true, { w.current.toString() })
+        check("rain today from forecast", w.current?.rainMm == 2.4)
+        check("daily dates in local zone", w.daily.first().date == LocalDate.of(2026, 10, 12) && w.daily.size == 4, { w.daily.map { it.date }.toString() })
+        check("daily conditions", w.daily.map { it.condition } == listOf(Condition.SHOWERS, Condition.FOG, Condition.THUNDERSTORM, Condition.UNKNOWN), { w.daily.map { it.condition }.toString() })
+        check("chance scaled to percent", w.daily[0].rainChancePct == 65 && w.daily[1].rainChancePct == 5)
+        check("min/max", w.daily[2].minC == 12.0 && w.daily[2].maxC == 27.3)
+        check("unmapped code warned", w.warnings.any { "SomethingNew" in it }, { w.warnings.toString() })
+        check("attribution kept", w.attribution?.contains("Apple Weather") == true)
+        expectThrows("no token source -> clear error", "no usable data") { DeclarativeProvider(def, f, now = fixedNow).fetch(melbourne) }
+        val failing = TokenSource { throw ProviderException("Apple WeatherKit needs a Team ID, Service ID and Key ID in the settings") }
+        expectThrows("token failure explained", "Team ID") { DeclarativeProvider(def, f, now = fixedNow, tokens = failing).fetch(melbourne) }
+        check("token never appears in webUrl/warnings", !w.warnings.any { "TESTJWT" in it } && w.webUrl == null)
     }
 
     println("\n$passes passed, $failures failed")

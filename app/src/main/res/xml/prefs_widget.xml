@@ -50,6 +50,11 @@
             android:max="100"
             app:min="0"
             app:showSeekBarValue="true" />
+        <SwitchPreferenceCompat
+            android:key="own_pictures"
+            android:title="@string/pref_own_pictures"
+            android:summary="@string/pref_own_pictures_summary"
+            android:defaultValue="false" />
         <ListPreference
             android:key="icon_pack"
             android:title="@string/pref_icon_pack"
@@ -68,6 +73,16 @@
             android:max="7"
             app:min="2"
             app:showSeekBarValue="true" />
+        <ListPreference
+            android:key="forecast_app"
+            android:title="@string/pref_forecast_app"
+            android:defaultValue=""
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference
+            android:key="weather_app"
+            android:title="@string/pref_weather_app"
+            android:defaultValue=""
+            app:useSimpleSummaryProvider="true" />
         <EditTextPreference
             android:key="weather_url"
             android:title="@string/pref_weather_url"
