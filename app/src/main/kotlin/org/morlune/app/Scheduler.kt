@@ -44,28 +44,32 @@ object Scheduler {
 }
 
 class WeatherWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
+    private fun report(msg: String) {
+        Prefs.global(applicationContext).edit().putString("last_status", msg).commit()
+    }
+
     override fun doWork(): Result {
         val ctx = applicationContext
         val g = GlobalSettings.of(ctx)
         val location = g.location() ?: return Result.success()   // nothing to do until a location is set
-        val status = Prefs.global(ctx).edit()
-        status.putString("last_status", "Fetching from ${g.providerId}…").commit()
+        report("Fetching from ${g.providerId}…")
         return try {
-            val registry = ProviderStore.registry(ctx)
+            val registry = ProviderStore.registry(ctx, ::report)
+            report("Providers loaded: ${registry.all().joinToString { it.id }}")
             val data = registry.fetchWithFallback(g.providerId, if (g.fallbackToOpenMeteo) "open-meteo" else null, location)
             WeatherCache.save(ctx, data)
             val note = data.warnings.firstOrNull()?.let { " ($it)" }.orEmpty()
-            status.putString("last_status", "Updated ${DateFormat.getTimeInstance(DateFormat.SHORT).format(Date())} from ${data.providerId}$note").commit()
+            report("Updated ${DateFormat.getTimeInstance(DateFormat.SHORT).format(Date())} from ${data.providerId}$note")
             WidgetUpdater.updateAll(ctx)
             Result.success()
         } catch (e: ProviderException) {
             Log.w("Morlune", "fetch failed: ${e.message}")
-            status.putString("last_status", "Failed: ${e.message}").commit()
+            report("Failed: ${e.message}")
             if (runAttemptCount < 2) Result.retry() else Result.success()   // keep showing the last good data
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             // Anything unexpected must still leave a visible reason behind.
             Log.e("Morlune", "fetch crashed", e)
-            status.putString("last_status", "Failed: ${e.javaClass.simpleName}: ${e.message}").commit()
+            report("Crashed: ${e.javaClass.simpleName}: ${e.message}")
             Result.success()
         }
     }

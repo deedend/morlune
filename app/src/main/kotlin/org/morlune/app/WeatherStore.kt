@@ -2,8 +2,10 @@
 package org.morlune.app
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import org.morlune.engine.HttpFetcher
+import org.morlune.engine.HttpResult
 import org.morlune.engine.ProviderException
 import org.morlune.engine.ProviderLoader
 import org.morlune.engine.ProviderRegistry
@@ -32,6 +34,21 @@ object WeatherCache {
     private const val TAG = "Morlune"
 }
 
+private class ReportingFetcher(private val inner: HttpFetcher, private val report: (String) -> Unit) : HttpFetcher {
+    override fun get(url: String, headers: Map<String, String>): HttpResult {
+        val host = Uri.parse(url).host ?: url
+        report("Requesting $host…")
+        try {
+            val r = inner.get(url, headers)
+            report("$host answered HTTP ${r.status}, ${r.body.length} chars")
+            return r
+        } catch (e: Throwable) {
+            report("$host: ${e.javaClass.simpleName}: ${e.message}")
+            throw e
+        }
+    }
+}
+
 /** Built-in providers live in assets/providers, imported ones in filesDir/providers. */
 object ProviderStore {
     private const val TAG = "Morlune"
@@ -39,8 +56,10 @@ object ProviderStore {
 
     private fun userDir(ctx: Context) = File(ctx.filesDir, "providers").also { it.mkdirs() }
 
-    fun registry(ctx: Context): ProviderRegistry {
-        val fetcher: HttpFetcher = UrlConnectionFetcher(userAgent = "Morlune/${BuildConfig.VERSION_NAME} (open source Android widget)")
+    /** [report] (optional) is told about each network step, so a stuck fetch can be located from the widget. */
+    fun registry(ctx: Context, report: ((String) -> Unit)? = null): ProviderRegistry {
+        val plain = UrlConnectionFetcher(userAgent = "Morlune/${BuildConfig.VERSION_NAME} (open source Android widget)")
+        val fetcher: HttpFetcher = if (report == null) plain else ReportingFetcher(plain, report)
         val reg = ProviderRegistry(fetcher)
         builtinJson(ctx).forEach { (name, text) -> add(reg, name, text) }
         userDir(ctx).listFiles { f -> f.extension == "json" }?.sortedBy { it.name }?.forEach { add(reg, it.name, it.readText()) }
