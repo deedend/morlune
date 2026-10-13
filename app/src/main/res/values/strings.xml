@@ -115,4 +115,8 @@
     <string name="provider_rejected">Rejected: %1$s</string>
     <string name="no_imported_providers">No imported providers</string>
     <string name="refreshing">Refreshing…</string>
+    <string name="pref_date_size">Date font size (sp)</string>
+    <string name="pref_forecast_icon_size">Forecast icon size (dp)</string>
+    <string name="pref_today_width_pct">Today column width (%)</string>
+    <string name="pref_today_width_summary">100 = equal columns; 200 = today twice the width of each other day</string>
 </resources>

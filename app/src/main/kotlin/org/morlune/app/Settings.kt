@@ -66,6 +66,8 @@ class GlobalSettings(private val p: SharedPreferences) {
 class WidgetSettings(private val p: SharedPreferences) {
     val clockStyle: String get() = p.getString("clock_style", "system").orEmpty()
     val clockSizeSp: Int get() = p.getInt("clock_size", 64)
+    val dateSizeSp: Int get() = p.getInt("date_size", 15).coerceIn(10, 32)
+    val forecastIconDp: Int get() = p.getInt("forecast_icon_size", 24).coerceIn(16, 48)
     val datePattern: String get() = p.getString("date_pattern", "EEEE d MMMM").orEmpty().ifBlank { "EEEE d MMMM" }
     val showLocation: Boolean get() = p.getBoolean("show_location", true)
     val clockApp: String get() = p.getString("clock_app", "").orEmpty()
@@ -85,6 +87,7 @@ class WidgetSettings(private val p: SharedPreferences) {
     val calendarRows: Int get() = p.getInt("calendar_rows", 6)
     val weekStart: WeekStart get() = runCatching { WeekStart.valueOf(p.getString("week_start", "MONDAY").orEmpty()) }.getOrDefault(WeekStart.MONDAY)
     val weekChips: Int get() = p.getInt("week_chips", 3)
+    val todayWidthPct: Int get() = (p.getInt("today_width_pct", 100).coerceIn(100, 200) / 10) * 10
     val weekDays: Int get() = p.getInt("week_days", 7).coerceIn(3, 7)
     val calendarApp: String get() = p.getString("calendar_app", "").orEmpty()
 

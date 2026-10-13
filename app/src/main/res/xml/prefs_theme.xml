@@ -3,6 +3,7 @@
  <PreferenceCategory android:title="@string/pref_clock_cat">
   <ListPreference android:key="clock_style" android:title="@string/pref_clock_style" android:entries="@array/clock_style_entries" android:entryValues="@array/clock_style_values" android:defaultValue="system" app:useSimpleSummaryProvider="true" />
   <SeekBarPreference android:key="clock_size" android:title="@string/pref_clock_size" android:defaultValue="64" android:max="96" app:min="32" app:showSeekBarValue="true" />
+  <SeekBarPreference android:key="date_size" android:title="@string/pref_date_size" android:defaultValue="15" android:max="32" app:min="10" app:showSeekBarValue="true" />
   <EditTextPreference android:key="date_pattern" android:title="@string/pref_date_pattern" android:summary="@string/pref_date_pattern_summary" android:defaultValue="EEEE d MMMM" />
   <SwitchPreferenceCompat android:key="show_location" android:title="@string/pref_show_location" android:defaultValue="true" />
  </PreferenceCategory>
@@ -12,6 +13,7 @@
   <SwitchPreferenceCompat android:key="own_pictures" android:title="@string/pref_own_pictures" android:summary="@string/pref_own_pictures_summary" android:defaultValue="false" />
   <Preference android:key="pictures_choose" android:title="@string/pref_pictures_choose" android:summary="@string/pref_pictures_summary" />
   <Preference android:key="pictures_clear" android:title="@string/pref_pictures_clear" />
+  <SeekBarPreference android:key="forecast_icon_size" android:title="@string/pref_forecast_icon_size" android:defaultValue="24" android:max="48" app:min="16" app:seekBarIncrement="4" app:showSeekBarValue="true" />
   <ListPreference android:key="icon_pack" android:title="@string/pref_icon_pack" android:entries="@array/icon_pack_entries" android:entryValues="@array/icon_pack_values" android:defaultValue="simple" app:useSimpleSummaryProvider="true" />
   <org.morlune.app.ColorPreference android:key="icon_color" android:title="@string/pref_icon_color" android:defaultValue="#FFFFFFFF" />
  </PreferenceCategory>
