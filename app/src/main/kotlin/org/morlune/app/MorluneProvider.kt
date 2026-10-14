@@ -16,6 +16,11 @@ class MorluneProvider : AppWidgetProvider() {
         if (WeatherCache.load(context) == null && GlobalSettings.of(context).location() != null) Scheduler.fetchNow(context)
     }
 
+    override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, appWidgetId: Int, newOptions: android.os.Bundle) {
+        super.onAppWidgetOptionsChanged(context, manager, appWidgetId, newOptions)
+        WidgetUpdater.update(context, appWidgetId)
+    }
+
     override fun onEnabled(context: Context) {
         Scheduler.schedule(context)
         Scheduler.fetchNow(context)

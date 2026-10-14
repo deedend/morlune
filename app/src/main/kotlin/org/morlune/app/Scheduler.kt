@@ -51,6 +51,7 @@ class WeatherWorker(context: Context, params: WorkerParameters) : Worker(context
 
     override fun doWork(): Result {
         val ctx = applicationContext
+        DeviceLocationRefresh.updateSavedLocation(ctx)
         val g = GlobalSettings.of(ctx)
         val location = g.location() ?: return Result.success()   // nothing to do until a location is set
         report("Fetching from ${g.providerId}…")

@@ -14,6 +14,14 @@
     <string name="rain_fmt">%1$s rain</string>
     <string name="updating">Updating…</string>
 
+    <string name="settings_weather">Weather provider</string>
+    <string name="settings_weather_summary">Weather sources, update frequency and location (shared by all widgets)</string>
+    <string name="settings_apps">Apps</string>
+    <string name="settings_apps_summary">Clock, calendar, weather actions and calendar views</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_summary">Colours, transparency, icons, backgrounds and clock appearance</string>
+    <string name="settings_add_widget_first">Add a Morlune widget to configure its apps and appearance</string>
+    <string name="pref_weather_app_section">Weather and forecast</string>
     <string name="pref_weather_cat">Weather source</string>
     <string name="pref_provider">Weather provider</string>
     <string name="pref_fallback">Fall back to Open-Meteo</string>
@@ -25,12 +33,18 @@
     <string name="pref_remove_provider">Remove an imported provider…</string>
 
     <string name="pref_location_cat">Location</string>
-    <string name="pref_loc_name">Place name</string>
+    <string name="pref_loc_name">Place name (optional override)</string>
+    <string name="pref_resolved_suburb">Detected suburb</string>
+    <string name="pref_resolve_suburb">Detect suburb from coordinates</string>
+    <string name="pref_resolve_suburb_summary">Uses the phone\'s geocoding service. May require internet.</string>
+    <string name="suburb_not_set">Not detected yet</string>
+    <string name="suburb_unavailable">Suburb could not be resolved</string>
+    <string name="location_invalid">Enter valid latitude and longitude first</string>
     <string name="pref_loc_lat">Latitude</string>
     <string name="pref_loc_lon">Longitude</string>
     <string name="pref_loc_zone">Time zone (blank = phone setting)</string>
     <string name="pref_loc_device">Use the phone\'s last known location</string>
-    <string name="pref_loc_device_summary">Fills in latitude and longitude once; the name stays yours to type</string>
+    <string name="pref_loc_device_summary">Fills coordinates and attempts to detect the suburb; place-name override stays unchanged</string>
 
     <string name="pref_refresh_cat">Updates</string>
     <string name="pref_refresh">Check the weather every</string>
@@ -57,6 +71,7 @@
     <string name="pref_calendar_mode">View</string>
     <string name="pref_calendar_rows">Agenda rows</string>
     <string name="pref_week_start">Week starts</string>
+    <string name="pref_week_days">Visible days in week view</string>
     <string name="pref_week_chips">Events per day (week view)</string>
     <string name="pref_calendar_app">App opened by the calendar</string>
 
@@ -78,14 +93,6 @@
     <string name="pref_own_pictures_summary">Off: the built-in pictures. On: pictures from the folder chosen in the weather source settings, where one matches</string>
     <string name="pref_forecast_app">App opened by the forecast icons</string>
     <string name="same_as_weather">Same as the weather</string>
-    <string name="pref_apple_cat">Apple WeatherKit (only if you use it)</string>
-    <string name="pref_apple_team">Apple Team ID</string>
-    <string name="pref_apple_service">Apple Service ID</string>
-    <string name="pref_apple_key_id">Apple Key ID</string>
-    <string name="pref_apple_key">Apple private key (.p8 file)…</string>
-    <string name="apple_key_loaded">Key loaded</string>
-    <string name="apple_key_missing">No key loaded yet</string>
-    <string name="apple_key_rejected">Not a usable key: %1$s</string>
     <string name="pref_data_credit">Weather data credit</string>
     <string name="credit_none">No weather loaded yet</string>
     <string name="pref_global_settings">Weather source, location and updates</string>
@@ -100,4 +107,8 @@
     <string name="provider_rejected">Rejected: %1$s</string>
     <string name="no_imported_providers">No imported providers</string>
     <string name="refreshing">Refreshing…</string>
+    <string name="pref_date_size">Date font size (sp)</string>
+    <string name="pref_forecast_icon_size">Forecast icon size (dp)</string>
+    <string name="pref_today_width_pct">Today column width (%)</string>
+    <string name="pref_today_width_summary">100 = equal columns; 200 = today twice the width of each other day</string>
 </resources>

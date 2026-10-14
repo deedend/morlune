@@ -1,60 +1,87 @@
 # Morlune
 
-A no-fuss Android home-screen widget: big clock, date, place, current weather, a forecast strip and a calendar
-snippet, with a background picture that matches the weather. Free software, GPL-3.0-or-later, no Google Play
-Services, no accounts, no tracking.
+Morlune is a free, open-source Android home-screen widget combining a clock, weather forecasts and calendar events in a customisable daily dashboard.
 
-## What it does
+**GPL-3.0-or-later · Android 8.0+ · No ads, accounts, tracking or Google Play Services required**
 
-- Top row: big clock (TextClock, so it ticks without waking the app), date, place, current temperature, today's
-  min/max and rain.
-- Forecast strip: icon plus min/max for the coming days.
-- Calendar: reads the system calendar (colours as in your calendar app), as an agenda list or a 7-day week.
-- Weather background picture, opacity settable, changing when new weather is fetched. Built-in placeholders, or your own
-  photos from a folder you pick (matched to the weather by their names, see docs/IMAGES.md).
-- Taps: clock opens an app you choose, the calendar opens the calendar app you choose, the weather opens a separate weather
-  app you choose (for example Weawow) or, if none is set, a web page (default: the provider's page).
-- Settings per widget: clock style and size, date format, colours, background opacity, icon colour and set, forecast
-  days, agenda rows, week start, events per day.
-- Global settings: weather provider, location, update interval (1h, 2h, 6h, 12h, once a day).
+## Features
+
+- **Clock and date:** large, adjustable clock; 12/24-hour format; separate date font size and date format.
+- **Weather:** current temperature, today's minimum/maximum and rainfall, plus a configurable multi-day forecast with adjustable icons.
+- **Calendar:** display events from your Android calendars in an agenda or week view. Choose 3–7 visible days, adjust today's column from 100% (equal widths) to 200% (twice the width of another day), and configure event density.
+- **Appearance:** text and icon colours, background colour and transparency, weather-themed background images, optional pictures from your own folder, and independent image opacity.
+- **Tap actions:** choose which clock, calendar and weather apps open when their respective widget areas are tapped, or open a weather web page.
+- **Multiple widgets:** each widget can have its own appearance and app shortcuts; weather-provider and location settings are shared.
+- **Background updates:** periodic weather refresh with cached data for offline use.
+
+The widget initially occupies approximately **5 × 2 launcher cells**. The actual size depends on your home-screen launcher and can be adjusted after placing it.
+
+## Getting started
+
+1. Install Morlune and add its widget to your Android home screen.
+2. Open **Morlune Settings → Weather provider** and select your weather source and location.
+3. Allow calendar access if you want your events displayed. Grant location permission if you want Morlune to use the phone's last known location.
+4. Under **Apps**, choose your calendar view and optional apps to open when tapping the widget.
+5. Under **Theme**, adjust the clock, icons, colours and background images.
+
+### Settings
+
+| Section | Options |
+| --- | --- |
+| **Weather provider** | Weather sources, Open-Meteo fallback, update frequency, coordinates, detected suburb and optional place-name override |
+| **Apps** | Clock/calendar/weather tap actions, agenda or week view, visible days, today-column width and forecast days |
+| **Theme** | Clock and date sizes, icon size and style, colours, background transparency and weather pictures |
+
+A blank *Place name* uses the detected suburb when Android geocoding can resolve one. Setting a place name overrides the displayed suburb without changing the forecast coordinates.
 
 ## Weather providers
 
-Providers are JSON files, no code needed: see [docs/PROVIDERS.md](docs/PROVIDERS.md). Included:
+- **Bureau of Meteorology (BOM)** (`bom-au`): default provider for Australia. It uses endpoints underlying the BOM website; these are not a stable, documented public API and may change. Keep polling intervals reasonable.
+- **Open-Meteo** (`open-meteo`): worldwide forecasts, no API key required; can be enabled as fallback if the selected provider fails.
+- **Custom providers:** import a provider JSON file. See [Provider documentation](docs/PROVIDERS.md) for the supported format.
 
-- `bom-au`: Australia's Bureau of Meteorology, using the JSON endpoints behind weather.bom.gov.au. These are
-  undocumented and can change; BOM's terms restrict heavy automated use, so keep the update interval sensible.
-- `open-meteo`: worldwide, documented, no key. Used as the automatic fallback.
-- `apple-weatherkit`: Apple's forecast API. Needs your own Apple developer account, see [docs/APPLE.md](docs/APPLE.md).
+Apple WeatherKit is **not included**.
 
-Import your own from the settings, or add it to `app/src/main/assets/providers/` and send a pull request.
-For sources that cannot be described in JSON, implement `WeatherProvider` in Kotlin.
+## Location and privacy
 
-## Building
+- Morlune does not contain an advertising or analytics SDK and does not require an account.
+- The selected weather provider receives the coordinates required to obtain a forecast. A configured fallback provider may also receive them if the primary provider fails.
+- Calendar events are read locally on the device and are not sent to weather providers.
+- With location permission, weather refreshes may check a recent last-known device location and update saved coordinates. This does not continuously track location or request an active GPS fix for every refresh. If Android cannot provide a suitable location, the last saved coordinates remain in use.
+- Suburb lookup uses Android's geocoding service, whose availability and network behaviour depend on the device and its configured service.
+- If you import a custom provider, its configured endpoints will receive the requests you authorise; review provider definitions before importing them.
 
+## Build from source
+
+Requirements: **JDK 17**, Android SDK (compile SDK 35) and Gradle wrapper.
+
+```bash
+./gradlew :engine:runTests
+./gradlew :app:assembleDebug
 ```
-./gradlew :engine:runTests     # provider engine + calendar logic tests (plain JVM)
-./gradlew :app:assembleDebug   # APK in app/build/outputs/apk/debug
+
+The debug APK is generated under `app/build/outputs/apk/debug/`.
+
+```bash
+./gradlew :app:assembleRelease
 ```
 
-Needs JDK 17 and the Android SDK (compileSdk 35). minSdk is 26.
-Without Gradle, `scripts/test.sh` runs the engine tests with just `kotlinc` and `jsoup.jar`.
+The release variant may require signing before it can be installed or distributed. The minimum supported Android API level is 26 (Android 8.0).
 
-## Layout
+For standalone engine testing without Gradle, see `scripts/test.sh` (requires a Kotlin compiler and jsoup JAR).
 
-- `engine/`: pure Kotlin/JVM. Provider loader and scraper, JSON/JSONPath, calendar grouping, formatting, cache format.
-  Everything here has tests.
-- `app/`: the Android widget, settings screen and background updates (WorkManager).
-- `app/src/main/res/drawable-nodpi/bg_*.webp`: **placeholder** weather pictures, generated gradients.
-  See `docs/IMAGES.md` for how to replace them with photos.
-- `docs/`: provider format and image notes.
+## Source layout
 
-## Privacy
+- `engine/`: Kotlin weather-provider processing, calendar/forecast logic and unit tests.
+- `app/`: Android widget, settings, rendering, permissions and WorkManager updates.
+- `app/src/main/assets/providers/`: bundled weather-provider definitions.
+- `docs/PROVIDERS.md`: custom weather provider format.
+- `docs/IMAGES.md`: custom weather background images.
 
-The app only talks to the weather provider you choose (your coordinates are part of that request). Location is
-typed in, or copied once from the phone's last known location; there is no background location access. Calendar data
-is read on the phone and never leaves it.
+## Contributions and issues
+
+Report bugs or propose changes in the [GitHub issue tracker](https://github.com/deedend/morlune/issues). Pull requests are welcome. For bug reports, include the Android version, launcher, app version and steps to reproduce the problem.
 
 ## Licence
 
-GPL-3.0-or-later. See `LICENSE`. Every source file carries an SPDX header.
+Morlune is licensed under **GPL-3.0-or-later**. See [LICENSE](LICENSE).

@@ -11,8 +11,6 @@ import org.morlune.engine.HttpResult
 import org.morlune.engine.ProviderException
 import org.morlune.engine.ProviderLoader
 import org.morlune.engine.ProviderRegistry
-import org.morlune.engine.TokenSource
-import org.morlune.engine.AppleJwt
 import org.morlune.engine.UrlConnectionFetcher
 import org.morlune.engine.WeatherData
 import org.morlune.engine.WeatherJson
@@ -73,7 +71,7 @@ object ProviderStore {
     fun registry(ctx: Context, report: ((String) -> Unit)? = null): ProviderRegistry {
         val plain = UrlConnectionFetcher(userAgent = "Morlune/${BuildConfig.VERSION_NAME} (open source Android widget)")
         val fetcher: HttpFetcher = if (report == null) plain else ReportingFetcher(plain, report)
-        val reg = ProviderRegistry(fetcher, tokens = AppleTokens(ctx))
+        val reg = ProviderRegistry(fetcher)
         builtinJson(ctx).forEach { (name, text) -> add(reg, name, text) }
         userDir(ctx).listFiles { f -> f.extension == "json" }?.sortedBy { it.name }?.forEach { file ->
             try { add(reg, file.name, readProvider(file)) }
@@ -122,30 +120,4 @@ object ProviderStore {
         userDir(ctx).listFiles { f -> f.extension == "json" }?.map { it.nameWithoutExtension }?.sorted().orEmpty()
 
     fun remove(ctx: Context, id: String) { File(userDir(ctx), "$id.json").delete() }
-}
-
-/** Makes the `{token.apple}` value from the credentials typed into the settings and the .p8 key file kept in private storage. */
-class AppleTokens(private val ctx: Context) : TokenSource {
-    override fun token(name: String): String {
-        if (name != "apple") throw ProviderException("unknown token '$name'")
-        val p = Prefs.global(ctx)
-        return AppleJwt.create(
-            teamId = p.getString("apple_team_id", "").orEmpty(),
-            serviceId = p.getString("apple_service_id", "").orEmpty(),
-            keyId = p.getString("apple_key_id", "").orEmpty(),
-            privateKeyPem = keyFile(ctx).takeIf { it.exists() }?.readText().orEmpty(),
-            nowSeconds = System.currentTimeMillis() / 1000,
-        )
-    }
-
-    companion object {
-        private fun keyFile(ctx: Context) = File(ctx.filesDir, "apple_key.p8")
-        fun hasKey(ctx: Context) = keyFile(ctx).exists()
-
-        /** Stores the key after checking it can be read; throws ProviderException otherwise. */
-        fun saveKey(ctx: Context, pem: String) {
-            AppleJwt.parsePrivateKey(pem)
-            keyFile(ctx).writeText(pem)
-        }
-    }
 }

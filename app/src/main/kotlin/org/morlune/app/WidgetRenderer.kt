@@ -38,7 +38,7 @@ object WidgetRenderer {
         val rv = RemoteViews(ctx.packageName, R.layout.widget_main)
 
         background(ctx, rv, s, data, now)
-        clock(rv, s, g)
+        clock(ctx, widgetId, rv, s, g)
         weather(ctx, rv, s, g, data, now.toLocalDate())
         forecast(ctx, rv, s, data, now.toLocalDate())
         calendar(ctx, rv, s, zone, now.toLocalDate())
@@ -77,7 +77,11 @@ object WidgetRenderer {
         }
     }
 
-    private fun clock(rv: RemoteViews, s: WidgetSettings, g: GlobalSettings) {
+    private fun clock(ctx: Context, widgetId: Int, rv: RemoteViews, s: WidgetSettings, g: GlobalSettings) {
+        // The selected clock size is authoritative. The header is wrap_content, so it
+        // expands and contracts with the clock instead of silently clamping the size
+        // based on the launcher-reported widget height.
+        val clockSize = s.clockSizeSp.coerceIn(32, 96).toFloat()
         val (f12, f24) = when (s.clockStyle) {
             "24h" -> "HH:mm" to "HH:mm"
             "12h" -> "h:mm" to "h:mm"
@@ -87,7 +91,8 @@ object WidgetRenderer {
         // TextClock ticks by itself, so the app is not woken up every minute.
         rv.setCharSequence(R.id.clock, "setFormat12Hour", f12)
         rv.setCharSequence(R.id.clock, "setFormat24Hour", f24)
-        rv.setTextViewTextSize(R.id.clock, TypedValue.COMPLEX_UNIT_SP, s.clockSizeSp.toFloat())
+        rv.setTextViewTextSize(R.id.clock, TypedValue.COMPLEX_UNIT_SP, clockSize)
+        rv.setTextViewTextSize(R.id.date, TypedValue.COMPLEX_UNIT_SP, s.dateSizeSp.toFloat())
         rv.setCharSequence(R.id.date, "setFormat12Hour", s.datePattern)
         rv.setCharSequence(R.id.date, "setFormat24Hour", s.datePattern)
         listOf(R.id.clock, R.id.date, R.id.location).forEach { rv.setTextColor(it, s.textColor) }
@@ -136,13 +141,45 @@ object WidgetRenderer {
         if (days.isEmpty()) { rv.setViewVisibility(R.id.forecast, View.GONE); return }
         rv.setViewVisibility(R.id.forecast, View.VISIBLE)
         for (d in days) {
-            val cell = RemoteViews(ctx.packageName, R.layout.forecast_cell)
+            val cell = RemoteViews(ctx.packageName, forecastCellLayout(s.scaledForecastIconDp))
             cell.setImageViewResource(R.id.fc_icon, Icons.iconRes(ctx, s.iconPack, d.condition, true))
             cell.setInt(R.id.fc_icon, "setColorFilter", s.iconColor)
             cell.setTextViewText(R.id.fc_temps, Fmt.range(d.minC, d.maxC))
             cell.setTextColor(R.id.fc_temps, s.textColor)
             rv.addView(R.id.forecast, cell)
         }
+    }
+
+    private fun forecastCellLayout(dp: Int): Int = when (((dp.coerceIn(16, 64) + 2) / 4) * 4) {
+        16 -> R.layout.forecast_cell_16
+        20 -> R.layout.forecast_cell_20
+        24 -> R.layout.forecast_cell_24
+        28 -> R.layout.forecast_cell_28
+        32 -> R.layout.forecast_cell_32
+        36 -> R.layout.forecast_cell_36
+        40 -> R.layout.forecast_cell_40
+        44 -> R.layout.forecast_cell_44
+        48 -> R.layout.forecast_cell_48
+        52 -> R.layout.forecast_cell_52
+        56 -> R.layout.forecast_cell_56
+        60 -> R.layout.forecast_cell_60
+        64 -> R.layout.forecast_cell_64
+        else -> R.layout.forecast_cell_24
+    }
+
+    private fun todayColumnLayout(pct: Int): Int = when (pct.coerceIn(100, 200) / 10 * 10) {
+        100 -> R.layout.week_day_today_100
+        110 -> R.layout.week_day_today_110
+        120 -> R.layout.week_day_today_120
+        130 -> R.layout.week_day_today_130
+        140 -> R.layout.week_day_today_140
+        150 -> R.layout.week_day_today_150
+        160 -> R.layout.week_day_today_160
+        170 -> R.layout.week_day_today_170
+        180 -> R.layout.week_day_today_180
+        190 -> R.layout.week_day_today_190
+        200 -> R.layout.week_day_today_200
+        else -> R.layout.week_day_today_100
     }
 
     // ---- calendar ---------------------------------------------------------------------------------------------
@@ -153,13 +190,15 @@ object WidgetRenderer {
         if (!CalendarRepository.hasPermission(ctx)) return message(ctx, rv, R.string.cal_permission_needed)
 
         if (s.calendarMode == "week") {
-            val first = CalendarLogic.firstDay(today, s.weekStart)
-            val (from, to) = CalendarLogic.queryWindow(first, 7, zone)
-            val days = CalendarLogic.byDay(CalendarRepository.query(ctx, from, to), first, 7, zone)
+            val count = s.weekDays
+            // Compact views start today so they never show only past days.
+            val first = if (count == 7) CalendarLogic.firstDay(today, s.weekStart) else today
+            val (from, to) = CalendarLogic.queryWindow(first, count, zone)
+            val days = CalendarLogic.byDay(CalendarRepository.query(ctx, from, to), first, count, zone)
             val row = RemoteViews(ctx.packageName, R.layout.week_row)
             val dayFmt = DateTimeFormatter.ofPattern("EEEEE d", Locale.getDefault())
             for (day in days) {
-                val col = RemoteViews(ctx.packageName, R.layout.week_day)
+                val col = RemoteViews(ctx.packageName, if (day.date == today) todayColumnLayout(s.todayWidthPct) else R.layout.week_day)
                 val label = SpannableString(day.date.format(dayFmt))
                 if (day.date == today) label.setSpan(UnderlineSpan(), 0, label.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 col.setTextViewText(R.id.wk_header, label)

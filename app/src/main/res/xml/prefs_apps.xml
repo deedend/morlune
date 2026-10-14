@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+ <PreferenceCategory android:title="@string/pref_clock_cat">
+  <ListPreference android:key="clock_app" android:title="@string/pref_clock_app" android:defaultValue="" app:useSimpleSummaryProvider="true" />
+ </PreferenceCategory>
+ <PreferenceCategory android:title="@string/pref_calendar_cat">
+  <ListPreference android:key="calendar_app" android:title="@string/pref_calendar_app" android:defaultValue="" app:useSimpleSummaryProvider="true" />
+  <ListPreference android:key="calendar_mode" android:title="@string/pref_calendar_mode" android:entries="@array/calendar_mode_entries" android:entryValues="@array/calendar_mode_values" android:defaultValue="agenda" app:useSimpleSummaryProvider="true" />
+  <SeekBarPreference android:key="calendar_rows" android:title="@string/pref_calendar_rows" android:defaultValue="6" android:max="12" app:min="3" app:showSeekBarValue="true" />
+  <ListPreference android:key="week_start" android:title="@string/pref_week_start" android:entries="@array/week_start_entries" android:entryValues="@array/week_start_values" android:defaultValue="MONDAY" app:useSimpleSummaryProvider="true" />
+  <SeekBarPreference android:key="week_days" android:title="@string/pref_week_days" android:defaultValue="7" android:max="7" app:min="3" app:showSeekBarValue="true" />
+  <SeekBarPreference android:key="today_width_pct" android:title="@string/pref_today_width_pct" android:summary="@string/pref_today_width_summary" android:defaultValue="100" android:max="200" app:min="100" app:seekBarIncrement="10" app:showSeekBarValue="true" />
+  <SeekBarPreference android:key="week_chips" android:title="@string/pref_week_chips" android:defaultValue="3" android:max="6" app:min="1" app:showSeekBarValue="true" />
+ </PreferenceCategory>
+ <PreferenceCategory android:title="@string/pref_weather_app_section">
+  <ListPreference android:key="weather_app" android:title="@string/pref_weather_app" android:defaultValue="" app:useSimpleSummaryProvider="true" />
+  <ListPreference android:key="forecast_app" android:title="@string/pref_forecast_app" android:defaultValue="" app:useSimpleSummaryProvider="true" />
+  <EditTextPreference android:key="weather_url" android:title="@string/pref_weather_url" android:summary="@string/pref_weather_url_summary" android:defaultValue="" />
+  <SeekBarPreference android:key="forecast_days" android:title="@string/pref_forecast_days" android:defaultValue="7" android:max="7" app:min="2" app:showSeekBarValue="true" />
+ </PreferenceCategory>
+</PreferenceScreen>

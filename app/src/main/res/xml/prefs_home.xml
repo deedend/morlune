@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference android:key="settings_weather" android:title="@string/settings_weather" android:summary="@string/settings_weather_summary" />
+    <Preference android:key="settings_apps" android:title="@string/settings_apps" android:summary="@string/settings_apps_summary" />
+    <Preference android:key="settings_theme" android:title="@string/settings_theme" android:summary="@string/settings_theme_summary" />
+</PreferenceScreen>

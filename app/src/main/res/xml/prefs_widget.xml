@@ -18,7 +18,7 @@
         <SeekBarPreference
             android:key="clock_size"
             android:title="@string/pref_clock_size"
-            android:defaultValue="64"
+            android:defaultValue="75"
             android:max="96"
             app:min="32"
             app:showSeekBarValue="true" />
@@ -46,7 +46,7 @@
         <SeekBarPreference
             android:key="image_opacity"
             android:title="@string/pref_image_opacity"
-            android:defaultValue="70"
+            android:defaultValue="50"
             android:max="100"
             app:min="0"
             app:showSeekBarValue="true" />
@@ -69,7 +69,7 @@
         <SeekBarPreference
             android:key="forecast_days"
             android:title="@string/pref_forecast_days"
-            android:defaultValue="5"
+            android:defaultValue="7"
             android:max="7"
             app:min="2"
             app:showSeekBarValue="true" />
@@ -134,11 +134,11 @@
         <org.morlune.app.ColorPreference
             android:key="bg_color"
             android:title="@string/pref_bg_color"
-            android:defaultValue="#FF1B2733" />
+            android:defaultValue="#FF000000" />
         <SeekBarPreference
             android:key="bg_opacity"
             android:title="@string/pref_bg_opacity"
-            android:defaultValue="60"
+            android:defaultValue="0"
             android:max="100"
             app:min="0"
             app:showSeekBarValue="true" />
