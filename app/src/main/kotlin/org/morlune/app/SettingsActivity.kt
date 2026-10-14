@@ -206,7 +206,7 @@ class ThemeSettingsFragment : PreferenceFragmentCompat() {
 
 class GlobalSettingsFragment : PreferenceFragmentCompat() {
     /** Keys whose change means the weather has to be fetched again (or rescheduled). */
-    private val weatherKeys = setOf("provider_id", "fallback_open_meteo", "extra_values", "loc_lat", "loc_lon", "loc_zone", "loc_name", "loc_suburb", "refresh_minutes", "apple_team_id", "apple_service_id", "apple_key_id")
+    private val weatherKeys = setOf("provider_id", "fallback_open_meteo", "extra_values", "loc_lat", "loc_lon", "loc_zone", "loc_name", "loc_suburb", "refresh_minutes")
     private var dirty = false
     private val listener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
         if (key in weatherKeys) dirty = true
@@ -217,7 +217,6 @@ class GlobalSettingsFragment : PreferenceFragmentCompat() {
     }
 
     private val pickFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) importProvider(uri) }
-    private val pickAppleKey = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) importAppleKey(uri) }
     private val askLocation = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) fillFromDevice() else toast(getString(R.string.location_permission_denied))
     }
@@ -230,10 +229,6 @@ class GlobalSettingsFragment : PreferenceFragmentCompat() {
 
         findPreference<Preference>("import_provider")?.setOnPreferenceClickListener { pickFile.launch(arrayOf("application/json", "text/*", "*/*")); true }
         findPreference<Preference>("remove_provider")?.setOnPreferenceClickListener { removeProviderDialog(); true }
-        findPreference<Preference>("apple_import_key")?.apply {
-            summary = getString(if (AppleTokens.hasKey(requireContext())) R.string.apple_key_loaded else R.string.apple_key_missing)
-            setOnPreferenceClickListener { pickAppleKey.launch(arrayOf("*/*")); true }
-        }
         showCredit()
         findPreference<Preference>("data_credit")?.setOnPreferenceClickListener {
             val url = WeatherCache.load(requireContext())?.let { d -> firstUrl(d.attribution) ?: d.webUrl }
@@ -330,24 +325,6 @@ class GlobalSettingsFragment : PreferenceFragmentCompat() {
         return text.substring(start).takeWhile { !it.isWhitespace() }
     }
 
-    private fun importAppleKey(uri: Uri) {
-        val ctx = requireContext()
-        try {
-            val text = ctx.contentResolver.openInputStream(uri)?.bufferedReader()?.use { r ->
-                val buf = CharArray(MAX_KEY_CHARS + 1)
-                val n = r.read(buf)
-                if (n > MAX_KEY_CHARS) throw ProviderException("file is too large for a key")
-                if (n <= 0) "" else String(buf, 0, n)
-            } ?: throw ProviderException("could not read the file")
-            AppleTokens.saveKey(ctx, text)
-            findPreference<Preference>("apple_import_key")?.summary = getString(R.string.apple_key_loaded)
-            dirty = true
-        } catch (e: ProviderException) {
-            AlertDialog.Builder(ctx).setTitle(R.string.pref_apple_key).setMessage(getString(R.string.apple_key_rejected, e.message.orEmpty())).setPositiveButton(R.string.ok, null).show()
-        } catch (e: java.io.IOException) {
-            toast(getString(R.string.apple_key_rejected, e.message.orEmpty()))
-        }
-    }
 
     private fun fillFromDevice() {
         val ctx = requireContext()
@@ -396,5 +373,5 @@ class GlobalSettingsFragment : PreferenceFragmentCompat() {
 
     private fun toast(msg: String) = Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
 
-    private companion object { const val MAX_PROVIDER_CHARS = 200_000; const val MAX_KEY_CHARS = 20_000 }
+    private companion object { const val MAX_PROVIDER_CHARS = 200_000 }
 }

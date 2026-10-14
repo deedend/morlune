@@ -24,7 +24,7 @@ object Prefs {
 }
 
 class GlobalSettings(private val p: SharedPreferences) {
-    val providerId: String get() = p.getString("provider_id", "bom-au").orEmpty().ifBlank { "bom-au" }
+    val providerId: String get() = p.getString("provider_id", "bom-au").orEmpty().let { id -> if (id.isBlank() || id == "apple-weatherkit") "bom-au" else id }
     val fallbackToOpenMeteo: Boolean get() = p.getBoolean("fallback_open_meteo", true)
     val refresh: RefreshInterval get() = RefreshInterval.fromMinutes(p.getString("refresh_minutes", "120")?.toIntOrNull())
 

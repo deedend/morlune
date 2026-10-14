@@ -25,7 +25,6 @@ Providers are JSON files, no code needed: see [docs/PROVIDERS.md](docs/PROVIDERS
 - `bom-au`: Australia's Bureau of Meteorology, using the JSON endpoints behind weather.bom.gov.au. These are
   undocumented and can change; BOM's terms restrict heavy automated use, so keep the update interval sensible.
 - `open-meteo`: worldwide, documented, no key. Used as the automatic fallback.
-- `apple-weatherkit`: Apple's forecast API. Needs your own Apple developer account, see [docs/APPLE.md](docs/APPLE.md).
 
 Import your own from the settings, or add it to `app/src/main/assets/providers/` and send a pull request.
 For sources that cannot be described in JSON, implement `WeatherProvider` in Kotlin.

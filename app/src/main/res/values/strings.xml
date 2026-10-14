@@ -93,14 +93,6 @@
     <string name="pref_own_pictures_summary">Off: the built-in pictures. On: pictures from the folder chosen in the weather source settings, where one matches</string>
     <string name="pref_forecast_app">App opened by the forecast icons</string>
     <string name="same_as_weather">Same as the weather</string>
-    <string name="pref_apple_cat">Apple WeatherKit (only if you use it)</string>
-    <string name="pref_apple_team">Apple Team ID</string>
-    <string name="pref_apple_service">Apple Service ID</string>
-    <string name="pref_apple_key_id">Apple Key ID</string>
-    <string name="pref_apple_key">Apple private key (.p8 file)…</string>
-    <string name="apple_key_loaded">Key loaded</string>
-    <string name="apple_key_missing">No key loaded yet</string>
-    <string name="apple_key_rejected">Not a usable key: %1$s</string>
     <string name="pref_data_credit">Weather data credit</string>
     <string name="credit_none">No weather loaded yet</string>
     <string name="pref_global_settings">Weather source, location and updates</string>
