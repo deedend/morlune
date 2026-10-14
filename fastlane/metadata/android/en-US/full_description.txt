@@ -1,0 +1,14 @@
+Morlune is a free and open-source Android home-screen widget combining a large clock, weather forecasts and calendar events in one place.
+
+Features:
+* Clock with configurable size and time format, plus a separately sized date.
+* Current temperature, daily minimum/maximum, precipitation and multi-day forecast.
+* Week and agenda calendar views, with adjustable number of days and layout.
+* Choice of weather providers, including the Australian Bureau of Meteorology and Open-Meteo.
+* Customisable colours, transparency, weather icons and optional background pictures.
+* Tap actions to open your preferred clock, calendar and weather apps.
+* User-importable weather-provider definitions.
+
+Morlune requires a network connection for forecasts. Coordinates are sent to the selected weather provider to retrieve local weather. Calendar events are read locally from your device. Location access is optional; if allowed, location may be checked when weather updates run, subject to Android restrictions.
+
+No accounts, advertisements or tracking. Licensed under GPL-3.0-or-later.

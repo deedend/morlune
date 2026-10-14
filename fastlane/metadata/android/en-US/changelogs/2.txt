@@ -1,0 +1,1 @@
+First official release: configurable clock and date, BOM and Open-Meteo forecasts, calendar agenda and adjustable week view, personal themes, and optional location updates.
