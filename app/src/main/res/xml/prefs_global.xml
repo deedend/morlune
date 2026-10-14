@@ -7,7 +7,7 @@
         <ListPreference
             android:key="provider_id"
             android:title="@string/pref_provider"
-            android:defaultValue="open-meteo"
+            android:defaultValue="bom-au"
             app:useSimpleSummaryProvider="true" />
         <SwitchPreferenceCompat
             android:key="fallback_open_meteo"

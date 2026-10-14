@@ -16,6 +16,6 @@
   <ListPreference android:key="weather_app" android:title="@string/pref_weather_app" android:defaultValue="" app:useSimpleSummaryProvider="true" />
   <ListPreference android:key="forecast_app" android:title="@string/pref_forecast_app" android:defaultValue="" app:useSimpleSummaryProvider="true" />
   <EditTextPreference android:key="weather_url" android:title="@string/pref_weather_url" android:summary="@string/pref_weather_url_summary" android:defaultValue="" />
-  <SeekBarPreference android:key="forecast_days" android:title="@string/pref_forecast_days" android:defaultValue="5" android:max="7" app:min="2" app:showSeekBarValue="true" />
+  <SeekBarPreference android:key="forecast_days" android:title="@string/pref_forecast_days" android:defaultValue="7" android:max="7" app:min="2" app:showSeekBarValue="true" />
  </PreferenceCategory>
 </PreferenceScreen>

@@ -24,7 +24,7 @@ object Prefs {
 }
 
 class GlobalSettings(private val p: SharedPreferences) {
-    val providerId: String get() = p.getString("provider_id", "open-meteo").orEmpty().ifBlank { "open-meteo" }
+    val providerId: String get() = p.getString("provider_id", "bom-au").orEmpty().ifBlank { "bom-au" }
     val fallbackToOpenMeteo: Boolean get() = p.getBoolean("fallback_open_meteo", true)
     val refresh: RefreshInterval get() = RefreshInterval.fromMinutes(p.getString("refresh_minutes", "120")?.toIntOrNull())
 
@@ -65,23 +65,23 @@ class GlobalSettings(private val p: SharedPreferences) {
 
 class WidgetSettings(private val p: SharedPreferences) {
     val clockStyle: String get() = p.getString("clock_style", "system").orEmpty()
-    val clockSizeSp: Int get() = p.getInt("clock_size", 64)
-    val dateSizeSp: Int get() = p.getInt("date_size", 15).coerceIn(10, 32)
-    val forecastIconDp: Int get() = p.getInt("forecast_icon_size", 24).coerceIn(16, 48)
+    val clockSizeSp: Int get() = p.getInt("clock_size", 75)
+    val dateSizeSp: Int get() = p.getInt("date_size", 12).coerceIn(10, 32)
+    val forecastIconDp: Int get() = p.getInt("forecast_icon_size", 20).coerceIn(16, 48)
     /** Keep the forecast icons proportional to the configured clock size. The icon
-     * slider specifies the size at the default 64sp clock setting. */
+     * slider specifies the size at the default 75sp clock setting. */
     val scaledForecastIconDp: Int get() =
-        (forecastIconDp * (clockSizeSp.coerceIn(32, 96) / 64f)).toInt().coerceIn(16, 64)
+        (forecastIconDp * (clockSizeSp.coerceIn(32, 96) / 75f)).toInt().coerceIn(16, 64)
     val datePattern: String get() = p.getString("date_pattern", "EEEE d MMMM").orEmpty().ifBlank { "EEEE d MMMM" }
     val showLocation: Boolean get() = p.getBoolean("show_location", true)
     val clockApp: String get() = p.getString("clock_app", "").orEmpty()
 
     val imageEnabled: Boolean get() = p.getBoolean("image_enabled", true)
     val ownPictures: Boolean get() = p.getBoolean("own_pictures", false)
-    val imageOpacityPct: Int get() = p.getInt("image_opacity", 70)
+    val imageOpacityPct: Int get() = p.getInt("image_opacity", 50)
     val iconPack: String get() = p.getString("icon_pack", "simple").orEmpty().ifBlank { "simple" }
     val iconColor: Int get() = p.getInt("icon_color", Color.WHITE)
-    val forecastDays: Int get() = p.getInt("forecast_days", 5)
+    val forecastDays: Int get() = p.getInt("forecast_days", 7)
     val weatherApp: String get() = p.getString("weather_app", "").orEmpty()
     /** App for the forecast icons; blank means the same as [weatherApp]. */
     val forecastApp: String get() = p.getString("forecast_app", "").orEmpty()
@@ -96,8 +96,8 @@ class WidgetSettings(private val p: SharedPreferences) {
     val calendarApp: String get() = p.getString("calendar_app", "").orEmpty()
 
     val textColor: Int get() = p.getInt("text_color", Color.WHITE)
-    val bgColor: Int get() = p.getInt("bg_color", 0xFF1B2733.toInt())
-    val bgOpacityPct: Int get() = p.getInt("bg_opacity", 60)
+    val bgColor: Int get() = p.getInt("bg_color", 0xFF000000.toInt())
+    val bgOpacityPct: Int get() = p.getInt("bg_opacity", 0)
 
     companion object {
         fun of(ctx: Context, widgetId: Int) = WidgetSettings(Prefs.widget(ctx, widgetId))
