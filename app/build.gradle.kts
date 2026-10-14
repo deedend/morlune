@@ -18,8 +18,32 @@ android {
 
     buildFeatures { buildConfig = true }
 
+    // Optional local/CI signing. F-Droid can build without these environment variables
+    // and apply its own repository signature to the release APK.
+    val releaseKeystore = System.getenv("MORLUNE_KEYSTORE_PATH")
+    val releaseStorePassword = System.getenv("MORLUNE_KEYSTORE_PASSWORD")
+    val releaseKeyAlias = System.getenv("MORLUNE_KEY_ALIAS")
+    val releaseKeyPassword = System.getenv("MORLUNE_KEY_PASSWORD")
+    val releaseSigningReady = listOf(
+        releaseKeystore, releaseStorePassword, releaseKeyAlias, releaseKeyPassword
+    ).all { !it.isNullOrBlank() }
+
+    if (releaseSigningReady) {
+        signingConfigs {
+            create("morluneRelease") {
+                storeFile = file(requireNotNull(releaseKeystore))
+                storePassword = requireNotNull(releaseStorePassword)
+                keyAlias = requireNotNull(releaseKeyAlias)
+                keyPassword = requireNotNull(releaseKeyPassword)
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (releaseSigningReady) {
+                signingConfig = signingConfigs.getByName("morluneRelease")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
